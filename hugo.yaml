@@ -1,4 +1,4 @@
-baseURL: https://example.org/
+baseURL: https://02hyc.github.io/Blog/
 languageCode: en-us
 title: Yukino's Blog
 paginate: 5
@@ -92,7 +92,7 @@ params:
     - name: lastfm
       url: "https://www.last.fm/user/hycFrom02"
     - name: rss
-      url: "http://localhost:1313/index.xml"
+      url: "https://02hyc.github.io/Blog/index.xml"
 
   # analytics:
   #   google:
