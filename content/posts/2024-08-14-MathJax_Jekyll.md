@@ -1,8 +1,8 @@
 ---
 author: Huang Yanchen
-title: 记一次MathJax渲染失败 | MathJax parsed in kramdown in Jekyll
+title: 记一次MathJax渲染失败
 date: 2024-08-14
-description: A brief guide to setup KaTeX
+description: MathJax parsed in kramdown in Jekyll
 math: true
 ShowBreadCrumbs: false
 tags: ["Jekyll", "MathJax"]

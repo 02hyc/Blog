@@ -1,8 +1,8 @@
 ---
 author: Huang Yanchen
-title: 忽然想到 | Thoughts in bed
+title: 忽然想到
 date: 2022-09-25
-description: A brief guide to setup KaTeX
+description: Thoughts in bed
 math: true
 ShowBreadCrumbs: false
 tags: ["Education"]

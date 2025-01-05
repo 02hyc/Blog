@@ -1,8 +1,8 @@
 ---
 author: Huang Yanchen
-title: 记一次Vs Code ssh remote连接失败 | VS Code ssh remote failed to start
+title: 记一次Vs Code ssh remote连接失败
 date: 2024-08-19
-description: A brief guide to setup KaTeX
+description: VS Code ssh remote failed to start
 math: true
 ShowBreadCrumbs: false
 tags: ["VS Code", "ssh remote"]

@@ -1,8 +1,8 @@
 ---
 author: Huang Yanchen
-title: 再建Arch Linux | Reinstall Arch Linux
+title: 再建Arch Linux
 date: 2024-08-07
-description: A brief guide to setup KaTeX
+description: Reinstall Arch Linux
 math: true
 ShowBreadCrumbs: false
 tags: ["Linux", "VMWare Workstation Pro"]
