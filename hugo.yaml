@@ -82,6 +82,7 @@ params:
     Title: "Yukino's Blog"
     Content: Some random thoughts
 
+
   socialIcons:
     - name: x
       url: "https://x.com/YCH14419135"
