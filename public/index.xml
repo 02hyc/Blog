@@ -2,44 +2,44 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Yukino&#39;s Blog</title>
-    <link>http://localhost:1313/</link>
+    <link>http://localhost:1313/Blog/</link>
     <description>Recent content on Yukino&#39;s Blog</description>
     <image>
       <title>Yukino&#39;s Blog</title>
-      <url>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url>
-      <link>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
+      <url>http://localhost:1313/Blog/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url>
+      <link>http://localhost:1313/Blog/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
     </image>
     <generator>Hugo -- 0.125.7</generator>
     <language>en-us</language>
     <lastBuildDate>Mon, 19 Aug 2024 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/Blog/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>记一次Vs Code ssh remote连接失败 | VS Code ssh remote failed to start</title>
-      <link>http://localhost:1313/posts/2024-08-19-vscode_ssh/</link>
+      <title>记一次Vs Code ssh remote连接失败</title>
+      <link>http://localhost:1313/Blog/posts/2024-08-19-vscode_ssh/</link>
       <pubDate>Mon, 19 Aug 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/2024-08-19-vscode_ssh/</guid>
-      <description>A brief guide to setup KaTeX</description>
+      <guid>http://localhost:1313/Blog/posts/2024-08-19-vscode_ssh/</guid>
+      <description>VS Code ssh remote failed to start</description>
     </item>
     <item>
-      <title>记一次MathJax渲染失败 | MathJax parsed in kramdown in Jekyll</title>
-      <link>http://localhost:1313/posts/2024-08-14-mathjax_jekyll/</link>
+      <title>记一次MathJax渲染失败</title>
+      <link>http://localhost:1313/Blog/posts/2024-08-14-mathjax_jekyll/</link>
       <pubDate>Wed, 14 Aug 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/2024-08-14-mathjax_jekyll/</guid>
-      <description>A brief guide to setup KaTeX</description>
+      <guid>http://localhost:1313/Blog/posts/2024-08-14-mathjax_jekyll/</guid>
+      <description>MathJax parsed in kramdown in Jekyll</description>
     </item>
     <item>
-      <title>再建Arch Linux | Reinstall Arch Linux</title>
-      <link>http://localhost:1313/posts/2024-08-07-arch_linux/</link>
+      <title>再建Arch Linux</title>
+      <link>http://localhost:1313/Blog/posts/2024-08-07-arch_linux/</link>
       <pubDate>Wed, 07 Aug 2024 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/2024-08-07-arch_linux/</guid>
-      <description>A brief guide to setup KaTeX</description>
+      <guid>http://localhost:1313/Blog/posts/2024-08-07-arch_linux/</guid>
+      <description>Reinstall Arch Linux</description>
     </item>
     <item>
-      <title>忽然想到 | Thoughts in bed</title>
-      <link>http://localhost:1313/posts/2022-09-25-randomthoughts/</link>
+      <title>忽然想到</title>
+      <link>http://localhost:1313/Blog/posts/2022-09-25-randomthoughts/</link>
       <pubDate>Sun, 25 Sep 2022 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/2022-09-25-randomthoughts/</guid>
-      <description>A brief guide to setup KaTeX</description>
+      <guid>http://localhost:1313/Blog/posts/2022-09-25-randomthoughts/</guid>
+      <description>Thoughts in bed</description>
     </item>
   </channel>
 </rss>

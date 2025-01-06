@@ -169,3 +169,7 @@ outputs:
   - html
   term:
   - html
+
+services:
+  disqus:
+    shortname: disqus_kRQ5UVOpif
