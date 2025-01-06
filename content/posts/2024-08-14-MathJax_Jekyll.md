@@ -15,6 +15,7 @@ ShowBreadCrumbs: true
 ShowPostNavLinks: true
 ShowWordCount: true
 ShowRssButtonInSectionTermList: true
+comments: true
 ---
 上传了前一篇博客后，我像往常一样打开网站，却发现这篇文章中的数学公式都没有在网页上正确的渲染出来，怪异的符号在屏幕上扭曲，让我感到有点难堪，于是我第一时间检查了我 fork 的原仓库中的 issue，里面并没有太多关于公式渲染的内容。
 

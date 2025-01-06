@@ -20,6 +20,24 @@ minify:
   disableXML: true
   minifyOutput: true
 
+
+# <script src="https://giscus.app/client.js"
+#         data-repo="02hyc/02hyc"
+#         data-repo-id="R_kgDOJNwc9Q"
+#         data-category="Announcements"
+#         data-category-id="DIC_kwDOJNwc9c4ClwD9"
+#         data-mapping="title"
+#         data-strict="0"
+#         data-reactions-enabled="1"
+#         data-emit-metadata="0"
+#         data-input-position="top"
+#         data-theme="preferred_color_scheme"
+#         data-lang="zh-CN"
+#         data-loading="lazy"
+#         crossorigin="anonymous"
+#         async>
+# </script>
+
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
   title: ExampleSite
@@ -124,6 +142,18 @@ params:
     minMatchCharLength: 0
     limit: 10 # refer: https://www.fusejs.io/api/methods.html#search
     keys: ["title", "permalink", "summary", "content"]
+
+  page:
+    comments:
+      enable: true
+      giscus:
+        enable: true
+        repo: 02hyc/02hyc
+        repoId: R_kgDOJNwc9Q
+        category: Announcements
+        categoryId: DIC_kwDOJNwc9c4ClwD9
+        mapping: title
+
 menu:
   main:
     - identifier: archives
