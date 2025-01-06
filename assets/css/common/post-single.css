@@ -407,3 +407,37 @@ img.in-text {
     display: inline;
     margin: auto;
 }
+
+.post-meta__categories a {
+    color: var(--secondary);
+   text-decoration: none;
+   
+}
+.post-meta__categories a:hover {
+ text-decoration: underline;
+}
+.post-meta__item  .post-meta__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+   
+}
+/* 添加这两个选择器的样式 */
+.post-meta__item {
+    list-style-type: none;
+}
+.post-meta__categories {
+    list-style-type: none;
+}
+
+.bi-folder {
+    vertical-align: text-bottom; /* 将图标底部和文字底部对齐*/
+    margin-top: -3px; /* 可以调整此值 */
+    margin-left: 3px;
+  }
+  .categories-label{
+    display: inline-flex;
+    align-items: center;
+    margin-right: 4px;
+    vertical-align: middle; /* Add middle alignment to category text */
+  }
