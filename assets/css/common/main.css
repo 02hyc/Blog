@@ -1,18 +1,43 @@
+:root {
+    --gap: 20px; /* 重新设置 gap，可以调整此值 */
+}
+
 .main {
     position: relative;
     min-height: calc(100vh - var(--header-height) - var(--footer-height));
     max-width: calc(var(--main-width) + var(--gap) * 2);
     margin: auto;
-    padding: var(--gap);
+    padding: var(--gap); /* 默认左右两侧留有空白 */
+}
+
+.page-header {
+    margin-bottom: 1rem; /*  适当增加 header 底部空白 */
 }
 
 .page-header h1 {
-    font-size: 40px;
+    font-size: 2rem; /* 调整标题大小 */
+    margin-bottom: 0.5rem; /* 减少标题底部空白 */
 }
+
+.post-entry {
+    margin-bottom: 1.5rem;  /* 调整文章之间的空白 */
+}
+
+/* 可以设置 first-entry  和 tag-entry  的样式 */
+.first-entry {
+    margin-bottom: 1.5rem;
+}
+
+.tag-entry {
+    margin-bottom: 1.5rem;
+}
+
 
 .pagination {
     display: flex;
+    margin-top: 2rem;
 }
+
 
 .pagination a {
     color: var(--theme);

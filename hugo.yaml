@@ -98,7 +98,10 @@ params:
   # home-info mode
   homeInfoParams:
     Title: "Yukino's Blog"
-    Content: Some random thoughts
+    Content: >
+      * Hi, 欢迎来到我的部落格。
+      
+      * 没有什么特别的内容，希望在这里记录一些感想和娱乐。
 
 
   socialIcons:
