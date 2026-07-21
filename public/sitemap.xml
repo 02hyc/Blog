@@ -2,69 +2,69 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/Blog/categories/</loc>
+    <loc>https://02hyc.github.io/Blog/categories/</loc>
     <lastmod>2024-08-19T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/categories/coding/</loc>
+    <loc>https://02hyc.github.io/Blog/categories/coding/</loc>
     <lastmod>2024-08-19T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/posts/</loc>
+    <loc>https://02hyc.github.io/Blog/posts/</loc>
     <lastmod>2024-08-19T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/tags/ssh-remote/</loc>
+    <loc>https://02hyc.github.io/Blog/tags/ssh-remote/</loc>
     <lastmod>2024-08-19T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/tags/</loc>
+    <loc>https://02hyc.github.io/Blog/tags/</loc>
     <lastmod>2024-08-19T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/tags/vs-code/</loc>
+    <loc>https://02hyc.github.io/Blog/tags/vs-code/</loc>
     <lastmod>2024-08-19T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/</loc>
+    <loc>https://02hyc.github.io/Blog/</loc>
     <lastmod>2024-08-19T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/posts/2024-08-19-vscode_ssh/</loc>
+    <loc>https://02hyc.github.io/Blog/posts/2024-08-19-vscode_ssh/</loc>
     <lastmod>2024-08-19T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/categories/blog/</loc>
+    <loc>https://02hyc.github.io/Blog/categories/blog/</loc>
     <lastmod>2024-08-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/tags/jekyll/</loc>
+    <loc>https://02hyc.github.io/Blog/tags/jekyll/</loc>
     <lastmod>2024-08-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/tags/mathjax/</loc>
+    <loc>https://02hyc.github.io/Blog/tags/mathjax/</loc>
     <lastmod>2024-08-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/posts/2024-08-14-mathjax_jekyll/</loc>
+    <loc>https://02hyc.github.io/Blog/posts/2024-08-14-mathjax_jekyll/</loc>
     <lastmod>2024-08-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/tags/linux/</loc>
+    <loc>https://02hyc.github.io/Blog/tags/linux/</loc>
     <lastmod>2024-08-07T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/categories/linux/</loc>
+    <loc>https://02hyc.github.io/Blog/categories/linux/</loc>
     <lastmod>2024-08-07T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/tags/vmware-workstation-pro/</loc>
+    <loc>https://02hyc.github.io/Blog/tags/vmware-workstation-pro/</loc>
     <lastmod>2024-08-07T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/posts/2024-08-07-arch_linux/</loc>
+    <loc>https://02hyc.github.io/Blog/posts/2024-08-07-arch_linux/</loc>
     <lastmod>2024-08-07T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/tags/education/</loc>
+    <loc>https://02hyc.github.io/Blog/tags/education/</loc>
     <lastmod>2022-09-25T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/categories/memory/</loc>
+    <loc>https://02hyc.github.io/Blog/categories/memory/</loc>
     <lastmod>2022-09-25T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/posts/2022-09-25-randomthoughts/</loc>
+    <loc>https://02hyc.github.io/Blog/posts/2022-09-25-randomthoughts/</loc>
     <lastmod>2022-09-25T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/Blog/archives.fr/</loc>
+    <loc>https://02hyc.github.io/Blog/archives.fr/</loc>
   </url><url>
-    <loc>http://localhost:1313/Blog/archives/</loc>
+    <loc>https://02hyc.github.io/Blog/archives/</loc>
   </url><url>
-    <loc>http://localhost:1313/Blog/search/</loc>
+    <loc>https://02hyc.github.io/Blog/search/</loc>
   </url><url>
-    <loc>http://localhost:1313/Blog/search.fr/</loc>
+    <loc>https://02hyc.github.io/Blog/search.fr/</loc>
   </url>
 </urlset>

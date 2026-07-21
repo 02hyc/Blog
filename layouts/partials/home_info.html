@@ -1,13 +1,23 @@
 {{- with site.Params.homeInfoParams }}
-<article class="first-entry home-info">
-    <header class="entry-header">
-        <h1>{{ .Title | markdownify }}</h1>
-    </header>
-    <div class="entry-content">
+<section class="notebook-intro" aria-labelledby="notebook-title">
+    {{- with .Kicker }}
+    <p class="notebook-kicker">{{ . }}</p>
+    {{- end }}
+    <h1 id="notebook-title">{{ .Title | markdownify }}</h1>
+    <div class="notebook-description">
         {{ .Content | markdownify }}
     </div>
-    <footer class="entry-footer">
-        {{ partial "social_icons.html" (dict "align" site.Params.homeInfoParams.AlignSocialIconsTo) }}
+    <footer class="notebook-footer">
+        {{- with .Topics }}
+        <p class="notebook-topics">{{ . }}</p>
+        {{- end }}
+        {{- with .Links }}
+        <nav class="notebook-links" aria-label="Yanchen Huang profile links">
+            {{- range . }}
+            <a href="{{ .url }}">{{ .label }}</a>
+            {{- end }}
+        </nav>
+        {{- end }}
     </footer>
-</article>
+</section>
 {{- end -}}

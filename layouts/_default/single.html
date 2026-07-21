@@ -26,19 +26,13 @@
       {{- partial "edit_post.html" . -}}
       {{- partial "post_canonical.html" . -}}
       {{- $categories := .Language.Params.Taxonomies.category | default "categories" }}
-      {{- $categories := .Language.Params.Taxonomies.category | default "categories" }}
       {{- with ($.GetTerms $categories) }}
-          <li class="post-meta__item post-meta__categories">
-             <span class="categories-label">
-                {{ i18n "categories" | default "" }}
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-folder" viewBox="0 0 16 16">
-                   <path d="M.54 3.87.5 3a.5.5 0 0 1 .5-.5h3.67l.31.27A1.5 1.5 0 0 0 5.84 4.5h4.32a1.5 1.5 0 0 0 1.5-.99l.31-.27h3.67a.5.5 0 0 1 .5.5v10a.5.5 0 0 1-.5.5H1a.5.5 0 0 1-.5-.5v-10zM1 4h14v9H1V4z"/>
-                </svg>
-             </span>
-              {{ range . }}
-                <a href="{{.Permalink}}">{{ .LinkTitle }}</a>
-              {{ end }}
-          </li>
+          <span class="post-meta__categories">
+            <span aria-hidden="true">&nbsp;·&nbsp;</span>
+            {{- range $index, $category := . }}
+              {{- if $index }}, {{ end }}<a href="{{ $category.Permalink }}">{{ $category.LinkTitle }}</a>
+            {{- end }}
+          </span>
       {{- end }}
     </div>
     {{- end }}
