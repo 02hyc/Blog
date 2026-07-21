@@ -1,6 +1,6 @@
 baseURL: https://02hyc.github.io/Blog/
 languageCode: en-us
-title: Yanchen Huang — Academic Notes
+title: Yanchen Huang — Notes
 paginate: 5
 
 theme: ["PaperMod"]
@@ -37,9 +37,9 @@ minify:
 
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
-  title: Yanchen Huang — Academic Notes
-  description: "Research notes and technical essays by Yanchen Huang on machine learning, computer systems, and research practice."
-  keywords: [Machine Learning, Computer Science, Research Notes, Technical Essays]
+  title: Yanchen Huang — Notes
+  description: "Notes by Yanchen Huang on technology, learning, and things worth remembering."
+  keywords: [Technology, Learning, Notes, Blog]
   author: Yanchen Huang
   # author: ["Me", "You"] # multiple authors
   DateFormat: "Jan 2, 2006"
@@ -103,16 +103,13 @@ params:
 
   # home-info mode
   homeInfoParams:
-    Kicker: "Research notebook · 研究札记"
-    Title: "Academic Notes"
+    Title: "Notes"
     Content: |
-      Research notes, technical essays, and working ideas on machine learning,
-      computer systems, and the craft of doing research.
+      Notes on technology, learning, and things worth remembering.
 
-      记录研究过程中的问题、方法与复盘，也分享值得长期保留的技术实践。
-    Topics: "Machine learning · Systems · Research practice"
+      关于技术、学习，以及一些值得记下来的事。
     Links:
-      - label: "Academic homepage"
+      - label: "Homepage"
         url: "https://02hyc.github.io/"
       - label: "GitHub"
         url: "https://github.com/02hyc"
@@ -190,7 +187,7 @@ menu:
       url: /search/
       weight: 30
     - identifier: example
-      name: Academic Home
+      name: Homepage
       url: https://02hyc.github.io/
       weight: 40
 

@@ -1,9 +1,9 @@
 :root {
-    --gap: 28px;
-    --content-gap: 1.25rem;
-    --nav-width: 920px;
-    --main-width: 920px;
-    --header-height: 64px;
+    --gap: 22px;
+    --content-gap: 1rem;
+    --nav-width: 820px;
+    --main-width: 780px;
+    --header-height: 56px;
     --footer-height: 72px;
     --radius: 2px;
     --theme: #ffffff;
@@ -35,8 +35,8 @@ body,
 body {
     color: var(--primary);
     font-family: var(--sans);
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
 }
 
@@ -77,7 +77,7 @@ summary:focus-visible {
 .logo a {
     color: var(--primary);
     font-family: var(--display);
-    font-size: 1.13rem;
+    font-size: 1.02rem;
     font-weight: 400;
     letter-spacing: -0.015em;
 }
@@ -91,12 +91,12 @@ summary:focus-visible {
 }
 
 #menu li + li {
-    margin-inline-start: 1.3rem;
+    margin-inline-start: 1rem;
 }
 
 #menu a {
     color: var(--secondary);
-    font-size: 0.78rem;
+    font-size: 0.73rem;
     letter-spacing: 0.025em;
 }
 
@@ -112,11 +112,11 @@ summary:focus-visible {
 
 .main {
     max-width: calc(var(--main-width) + var(--gap) * 2);
-    padding: 0 var(--gap) 2.25rem;
+    padding: 0 var(--gap) 1.75rem;
 }
 
 .notebook-intro {
-    padding: clamp(2.8rem, 6vw, 4.5rem) 0 clamp(2.2rem, 4vw, 3rem);
+    padding: clamp(2rem, 4vw, 2.8rem) 0 clamp(1.5rem, 3vw, 2rem);
     border-bottom: 1px solid var(--border);
 }
 
@@ -130,19 +130,19 @@ summary:focus-visible {
 }
 
 .notebook-intro h1 {
-    margin: 0 0 0.9rem;
+    margin: 0 0 0.55rem;
     font-family: var(--display);
-    font-size: clamp(2.7rem, 5vw, 3.75rem);
+    font-size: clamp(2.15rem, 4vw, 2.7rem);
     font-weight: 400;
-    line-height: 1.05;
-    letter-spacing: -0.035em;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
 }
 
 .notebook-description {
-    max-width: 68ch;
+    max-width: 58ch;
     color: #343a40;
-    font-size: 0.98rem;
-    line-height: 1.68;
+    font-size: 0.9rem;
+    line-height: 1.58;
     text-wrap: pretty;
 }
 
@@ -153,9 +153,9 @@ summary:focus-visible {
 .notebook-footer {
     display: flex;
     align-items: flex-end;
-    justify-content: space-between;
-    gap: 1.2rem 2rem;
-    margin-top: 1.4rem;
+    justify-content: flex-start;
+    gap: 0.8rem 1.5rem;
+    margin-top: 0.9rem;
 }
 
 .notebook-topics {
@@ -169,9 +169,9 @@ summary:focus-visible {
 .notebook-links {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.35rem 0.9rem;
-    font-size: 0.78rem;
+    justify-content: flex-start;
+    gap: 0.3rem 0.8rem;
+    font-size: 0.73rem;
 }
 
 .notebook-links a {
@@ -186,10 +186,10 @@ summary:focus-visible {
 
 .post-entry.academic-entry {
     display: grid;
-    grid-template-columns: 108px minmax(0, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 1.1rem;
     margin: 0;
-    padding: 1.55rem 0 1.65rem;
+    padding: 1.15rem 0 1.25rem;
     border: 0;
     border-bottom: 1px solid var(--border);
     border-radius: 0;
@@ -206,7 +206,7 @@ summary:focus-visible {
 }
 
 .entry-date {
-    padding-top: 0.18rem;
+    padding-top: 0.12rem;
     color: var(--secondary);
     font-variant-numeric: tabular-nums;
 }
@@ -227,10 +227,10 @@ summary:focus-visible {
 }
 
 .entry-day {
-    margin-top: 0.15rem;
+    margin-top: 0.08rem;
     color: var(--primary);
     font-family: var(--display);
-    font-size: 0.96rem;
+    font-size: 0.88rem;
 }
 
 .entry-main {
@@ -240,7 +240,7 @@ summary:focus-visible {
 .entry-header h2 {
     color: var(--primary);
     font-family: var(--display);
-    font-size: clamp(1.42rem, 2.4vw, 1.7rem);
+    font-size: clamp(1.25rem, 2.2vw, 1.45rem);
     font-weight: 400;
     line-height: 1.25;
     letter-spacing: -0.018em;
@@ -253,10 +253,10 @@ summary:focus-visible {
 
 .entry-content {
     display: -webkit-box;
-    margin: 0.55rem 0 0;
+    margin: 0.38rem 0 0;
     color: var(--secondary);
-    font-size: 0.88rem;
-    line-height: 1.62;
+    font-size: 0.82rem;
+    line-height: 1.5;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     text-wrap: pretty;
@@ -266,9 +266,9 @@ summary:focus-visible {
     display: flex;
     flex-wrap: wrap;
     gap: 0.2rem 0.5rem;
-    margin-top: 0.75rem;
+    margin-top: 0.5rem;
     color: #788087;
-    font-size: 0.68rem;
+    font-size: 0.64rem;
     font-weight: 550;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -301,14 +301,14 @@ summary:focus-visible {
 
 .page-header {
     margin: 0;
-    padding: 2.8rem 0 1.35rem;
+    padding: 2rem 0 1rem;
     border-bottom: 1px solid var(--border);
 }
 
 .page-header h1 {
     margin: 0;
     font-family: var(--display);
-    font-size: clamp(2.2rem, 4vw, 3rem);
+    font-size: clamp(1.9rem, 3.5vw, 2.4rem);
     font-weight: 400;
     letter-spacing: -0.028em;
 }
@@ -320,13 +320,13 @@ summary:focus-visible {
 }
 
 .post-single {
-    max-width: 760px;
+    max-width: 700px;
     margin: 0 auto;
 }
 
 .post-header {
     margin: 0;
-    padding: clamp(2.8rem, 6vw, 4.2rem) 0 1.8rem;
+    padding: clamp(2rem, 4vw, 2.8rem) 0 1.3rem;
     border-bottom: 1px solid var(--border);
 }
 
@@ -349,9 +349,9 @@ summary:focus-visible {
 }
 
 .post-title {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.55rem;
     font-family: var(--display);
-    font-size: clamp(2.3rem, 5vw, 3.35rem);
+    font-size: clamp(1.95rem, 4.2vw, 2.65rem);
     font-weight: 400;
     line-height: 1.08;
     letter-spacing: -0.035em;
@@ -380,11 +380,11 @@ summary:focus-visible {
 }
 
 .post-content {
-    padding-top: 2rem;
+    padding-top: 1.5rem;
     color: var(--content);
     font-family: var(--display);
-    font-size: 1.075rem;
-    line-height: 1.82;
+    font-size: 1rem;
+    line-height: 1.74;
     overflow-wrap: break-word;
 }
 
@@ -406,20 +406,20 @@ summary:focus-visible {
 }
 
 .post-content h1 {
-    margin: 2.8rem 0 1.15rem;
-    font-size: 2rem;
+    margin: 2.3rem 0 0.95rem;
+    font-size: 1.75rem;
 }
 
 .post-content h2 {
-    margin: 2.6rem 0 1rem;
+    margin: 2.2rem 0 0.85rem;
     padding-bottom: 0.35rem;
     border-bottom: 1px solid var(--border);
-    font-size: 1.55rem;
+    font-size: 1.4rem;
 }
 
 .post-content h3 {
-    margin: 2rem 0 0.75rem;
-    font-size: 1.2rem;
+    margin: 1.7rem 0 0.65rem;
+    font-size: 1.13rem;
 }
 
 .post-content h4 {
@@ -535,8 +535,8 @@ summary:focus-visible {
 }
 
 .post-footer {
-    margin-top: 3rem;
-    padding-top: 1.4rem;
+    margin-top: 2.3rem;
+    padding-top: 1.1rem;
     border-top: 1px solid var(--border);
 }
 
@@ -579,7 +579,7 @@ summary:focus-visible {
 
 .archive-year-header {
     font-family: var(--display);
-    font-size: 2rem;
+    font-size: 1.7rem;
     font-weight: 400;
 }
 
@@ -655,7 +655,7 @@ summary:focus-visible {
     align-items: center;
     justify-content: space-between;
     max-width: calc(var(--main-width) + var(--gap) * 2);
-    padding: 1.1rem var(--gap) 1.6rem;
+    padding: 0.9rem var(--gap) 1.2rem;
     border-top: 1px solid var(--border);
     color: var(--secondary);
     font-size: 0.68rem;
@@ -724,11 +724,11 @@ summary:focus-visible {
     }
 
     .notebook-intro {
-        padding: 2.6rem 0 2rem;
+        padding: 1.8rem 0 1.45rem;
     }
 
     .notebook-intro h1 {
-        font-size: clamp(2.45rem, 13vw, 3.2rem);
+        font-size: clamp(2rem, 10vw, 2.4rem);
     }
 
     .notebook-footer {
@@ -738,13 +738,13 @@ summary:focus-visible {
 
     .notebook-links {
         justify-content: flex-start;
-        margin-top: 0.75rem;
+        margin-top: 0;
     }
 
     .post-entry.academic-entry {
         grid-template-columns: 1fr;
-        gap: 0.55rem;
-        padding: 1.35rem 0 1.45rem;
+        gap: 0.35rem;
+        padding: 1rem 0 1.1rem;
     }
 
     .entry-date time {
@@ -766,20 +766,20 @@ summary:focus-visible {
     }
 
     .entry-header h2 {
-        font-size: 1.45rem;
+        font-size: 1.28rem;
     }
 
     .post-header {
-        padding-top: 2.5rem;
+        padding-top: 1.8rem;
     }
 
     .post-title {
-        font-size: clamp(2.05rem, 10vw, 2.65rem);
+        font-size: clamp(1.8rem, 9vw, 2.25rem);
     }
 
     .post-content {
-        font-size: 1.02rem;
-        line-height: 1.78;
+        font-size: 0.98rem;
+        line-height: 1.72;
     }
 
     .post-content h2 {
