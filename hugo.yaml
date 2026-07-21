@@ -105,9 +105,9 @@ params:
   homeInfoParams:
     Title: "Notes"
     Content: |
-      Notes on technology, learning, and things worth remembering.
+      Notes from the distance between knowing and understanding.
 
-      关于技术、学习，以及一些值得记下来的事。
+      **记于知与悟之间。**
     Links:
       - label: "Homepage"
         url: "https://02hyc.github.io/"
