@@ -1,3 +1,38 @@
 {{- /* Footer custom content area start */ -}}
 {{- /*     Insert any custom code web-analytics, resources, etc. here */ -}}
+{{- if and .IsPage (.Param "ShowToc") }}
+<script>
+  (function () {
+    var toc = document.querySelector('.toc');
+    if (!toc) return;
+    var details = toc.querySelector('details');
+    var wide = window.matchMedia('(min-width: 1280px)');
+    var initiallyOpen = details.open;
+    // The sidebar is always expanded; the inline TOC keeps its own open state.
+    function sync() { details.open = wide.matches || initiallyOpen; }
+    sync();
+    wide.addEventListener('change', sync);
+
+    var links = Array.prototype.slice.call(toc.querySelectorAll('a[href^="#"]'));
+    var targets = links.map(function (a) {
+      return document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1)));
+    });
+    // Highlight the last heading that has scrolled past the top quarter of the viewport.
+    function spy() {
+      var line = window.innerHeight * 0.25, current = -1;
+      targets.forEach(function (el, i) {
+        if (el && el.getBoundingClientRect().top <= line) current = i;
+      });
+      links.forEach(function (a, i) { a.classList.toggle('active', i === current); });
+    }
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { spy(); ticking = false; });
+    }, { passive: true });
+    spy();
+  })();
+</script>
+{{- end }}
 {{- /* Footer custom content area end */ -}}

@@ -1,4 +1,5 @@
 ---
+draft: true
 author: Huang Yanchen
 title: 再建Arch Linux
 date: 2024-08-07

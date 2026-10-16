@@ -106,8 +106,6 @@ params:
     Title: "Notes"
     Content: |
       Notes from the distance between knowing and understanding.
-
-      **记于知与悟之间。**
     Links:
       - label: "Homepage"
         url: "https://02hyc.github.io/"
@@ -194,6 +192,20 @@ menu:
 # Read: https://github.com/adityatelange/hugo-PaperMod/wiki/FAQs#using-hugos-syntax-highlighter-chroma
 pygmentsUseClasses: true
 markup:
+  tableOfContents:
+    startLevel: 2
+    endLevel: 2
+  goldmark:
+    extensions:
+      passthrough:
+        enable: true
+        delimiters:
+          block:
+            - ["$$", "$$"]
+            - ["\\[", "\\]"]
+          inline:
+            - ["$", "$"]
+            - ["\\(", "\\)"]
   highlight:
     noClasses: false
     # anchorLineNos: true

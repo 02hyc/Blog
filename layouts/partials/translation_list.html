@@ -1,19 +1,7 @@
-{{- if .IsTranslated -}}
-{{- if (ne .Layout "search") }}
-{{- if or .Params.author site.Params.author (.Param "ShowReadingTime") (not .Date.IsZero) }}&nbsp;|&nbsp;{{- end -}}
+{{- /* Single-language site: an article may link to a standalone translation via front matter `translation` (page path) and `translationLabel`. */ -}}
+{{- with .Params.translation }}
+{{- with site.GetPage . }}
+{{- if or $.Params.author site.Params.author ($.Param "ShowReadingTime") (not $.Date.IsZero) }}&nbsp;|&nbsp;{{- end -}}
+<a class="translation-link" href="{{ .RelPermalink }}" hreflang="{{ cond (eq $.Params.translationLabel "English") "en" "zh" }}">{{ $.Params.translationLabel | default .Title }}</a>
 {{- end }}
-{{- i18n "translations" | default "Translations" }}:
-<ul class="i18n_list">
-    {{- range .Translations }}
-    <li>
-        <a href="{{ .Permalink }}">
-            {{- if (and site.Params.displayFullLangName (.Language.LanguageName)) }}
-            {{- .Language.LanguageName | emojify -}}
-            {{- else }}
-            {{- .Lang | title -}}
-            {{- end -}}
-        </a>
-    </li>
-    {{- end }}
-</ul>
 {{- end -}}

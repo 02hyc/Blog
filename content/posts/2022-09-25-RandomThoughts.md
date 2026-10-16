@@ -1,4 +1,5 @@
 ---
+draft: true
 author: Huang Yanchen
 title: 忽然想到
 date: 2022-09-25

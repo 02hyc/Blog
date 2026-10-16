@@ -14,6 +14,11 @@
       </span>
       {{- end }}
     </h1>
+    {{- with .Params.author }}
+    <div class="post-authors">
+      {{- if reflect.IsSlice . }}{{ delimit . ", " }}{{ else }}{{ . }}{{ end -}}
+    </div>
+    {{- end }}
     {{- if .Description }}
     <div class="post-description">
       {{ .Description }}

@@ -1,4 +1,5 @@
 ---
+draft: true
 author: Huang Yanchen
 title: 记一次MathJax渲染失败
 date: 2024-08-14
