@@ -24,6 +24,15 @@
       {{ .Description }}
     </div>
     {{- end }}
+    {{- if not .Date.IsZero }}
+    {{- $fmt := default "January 2, 2006" site.Params.DateFormat }}
+    <div class="post-dates">
+      <span>First published <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date | time.Format $fmt }}</time></span>
+      <span aria-hidden="true">&nbsp;·&nbsp;</span>
+      <span>Last modified <time datetime="{{ .Lastmod.Format "2006-01-02" }}">{{ .Lastmod | time.Format $fmt }}</time></span>
+    </div>
+    {{- .Store.Set "hideMetaDate" true }}
+    {{- end }}
     {{- if not (.Param "hideMeta") }}
     <div class="post-meta">
       {{- partial "post_meta.html" . -}}

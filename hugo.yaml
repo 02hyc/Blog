@@ -12,6 +12,10 @@ buildDrafts: false
 buildFuture: false
 buildExpired: false
 hasCJKLanguage: true
+enableGitInfo: true
+frontmatter:
+  # An explicit `lastmod` in front matter wins; otherwise use the file's last git commit.
+  lastmod: ["lastmod", ":git", "date"]
 
 minify:
   disableXML: true
