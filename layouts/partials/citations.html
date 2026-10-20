@@ -1,0 +1,106 @@
+<script>
+  // Turn in-text citations like [3] into links that preview the matching entry of the
+  // trailing reference list in a popover, instead of jumping the page down to it.
+  // Runs on DOMContentLoaded so KaTeX (registered earlier) has already rendered math.
+  document.addEventListener('DOMContentLoaded', function () {
+    var content = document.querySelector('.post-content');
+    if (!content) return;
+    var refList = content.lastElementChild;
+    if (!refList || refList.tagName !== 'OL') return;
+    var refs = refList.children;
+    var total = refs.length;
+    var start = parseInt(refList.getAttribute('start') || '1', 10);
+    for (var i = 0; i < total; i++) refs[i].id = 'ref-' + (start + i);
+
+    var pattern = /\[(\d+(?:\s*,\s*\d+)*)\]/g;
+    function valid(nums) {
+      return nums.every(function (n) { return document.getElementById('ref-' + n); });
+    }
+
+    var walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        if (refList.contains(node)) return NodeFilter.FILTER_REJECT;
+        if (node.parentElement.closest('a, code, pre, .katex, script, style')) return NodeFilter.FILTER_REJECT;
+        pattern.lastIndex = 0;
+        return pattern.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach(function (node) {
+      var text = node.nodeValue, last = 0, frag = document.createDocumentFragment(), m;
+      pattern.lastIndex = 0;
+      while ((m = pattern.exec(text))) {
+        var nums = m[1].split(',').map(function (s) { return s.trim(); });
+        // Skip brackets that are not citations, e.g. the interval [10, 50].
+        if (!valid(nums)) continue;
+        frag.appendChild(document.createTextNode(text.slice(last, m.index) + '['));
+        nums.forEach(function (n, k) {
+          if (k) frag.appendChild(document.createTextNode(', '));
+          var a = document.createElement('a');
+          a.className = 'cite-ref';
+          a.href = '#ref-' + n;
+          a.setAttribute('data-ref', n);
+          a.textContent = n;
+          frag.appendChild(a);
+        });
+        frag.appendChild(document.createTextNode(']'));
+        last = m.index + m[0].length;
+      }
+      if (!last) return;
+      frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+
+    var pop = document.createElement('div');
+    pop.className = 'cite-popover';
+    pop.setAttribute('role', 'tooltip');
+    pop.hidden = true;
+    document.body.appendChild(pop);
+
+    var current = null, hideTimer = null;
+    function show(a) {
+      clearTimeout(hideTimer);
+      if (current === a && !pop.hidden) return;
+      var n = a.getAttribute('data-ref');
+      pop.innerHTML = '<span class="cite-popover-num">[' + n + ']</span> ' +
+        document.getElementById('ref-' + n).innerHTML;
+      pop.hidden = false;
+      current = a;
+
+      var r = a.getBoundingClientRect(), gap = 8, margin = 12;
+      var w = pop.offsetWidth, h = pop.offsetHeight;
+      var left = Math.min(Math.max(r.left + r.width / 2 - w / 2, margin),
+                          document.documentElement.clientWidth - w - margin);
+      var top = r.bottom + gap;
+      if (top + h > window.innerHeight - margin && r.top - gap - h > margin) top = r.top - gap - h;
+      pop.style.left = left + window.scrollX + 'px';
+      pop.style.top = top + window.scrollY + 'px';
+    }
+    function hide() { pop.hidden = true; current = null; }
+    function hideSoon() { clearTimeout(hideTimer); hideTimer = setTimeout(hide, 200); }
+
+    var hover = window.matchMedia('(hover: hover)');
+    content.addEventListener('click', function (e) {
+      var a = e.target.closest('.cite-ref');
+      if (!a) return;
+      e.preventDefault();
+      if (current === a && !pop.hidden && !hover.matches) hide(); else show(a);
+    });
+    content.addEventListener('mouseover', function (e) {
+      var a = e.target.closest('.cite-ref');
+      if (a && hover.matches) show(a);
+    });
+    content.addEventListener('mouseout', function (e) {
+      if (e.target.closest('.cite-ref') && hover.matches) hideSoon();
+    });
+    pop.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
+    pop.addEventListener('mouseleave', function () { if (hover.matches) hideSoon(); });
+    document.addEventListener('click', function (e) {
+      if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('.cite-ref')) hide();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+    window.addEventListener('resize', hide);
+  });
+</script>

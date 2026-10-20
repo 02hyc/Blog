@@ -35,4 +35,7 @@
   })();
 </script>
 {{- end }}
+{{- if .IsPage }}
+{{ partial "citations.html" . }}
+{{- end }}
 {{- /* Footer custom content area end */ -}}

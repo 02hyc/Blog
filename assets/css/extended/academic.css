@@ -478,6 +478,44 @@ summary:focus-visible {
     text-decoration-color: rgba(111, 138, 160, 0.35);
 }
 
+/* In-text citations: [n] previews its reference in a popover rather than jumping to the list. */
+.post-content a.cite-ref {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.post-content a.cite-ref:hover {
+    text-decoration: underline;
+}
+
+.cite-popover {
+    position: absolute;
+    z-index: 100;
+    max-width: min(420px, calc(100vw - 24px));
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--entry);
+    box-shadow: 0 6px 24px rgba(23, 26, 29, 0.12);
+    color: var(--secondary);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.cite-popover[hidden] {
+    display: none;
+}
+
+.cite-popover-num {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.cite-popover a {
+    color: var(--accent);
+}
+
 .post-content blockquote {
     margin: 1.65rem 0;
     padding: 0.75rem 1rem;
