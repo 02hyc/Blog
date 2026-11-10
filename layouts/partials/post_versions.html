@@ -1,0 +1,33 @@
+{{- /* Version switcher for posts listed in data/versions.yaml; the first entry is the current version. */ -}}
+{{- with .Params.versions }}
+{{- with index site.Data.versions . }}
+{{- $lang := $.Params.versionLang | default "en" }}
+{{- $latest := index . 0 }}
+<div class="post-versions">
+  <span>Version</span>
+  {{- range $i, $v := . }}
+  {{- with site.GetPage (index $v $lang) }}
+  {{- if $i }}<span aria-hidden="true">&nbsp;·</span>{{ end }}
+  {{- if eq .RelPermalink $.RelPermalink }}
+  <span class="post-version current" aria-current="page">{{ $v.version }}</span>
+  {{- else }}
+  <a class="post-version" href="{{ .RelPermalink }}" title="{{ $v.date }}">{{ $v.version }}</a>
+  {{- end }}
+  {{- end }}
+  {{- end }}
+</div>
+{{- range . }}
+{{- if and (ne .version $latest.version) (eq (site.GetPage (index . $lang)).RelPermalink $.RelPermalink) }}
+{{- with site.GetPage (index $latest $lang) }}
+<div class="post-archived-note">
+  {{- if eq $lang "zh" -}}
+  这是本文的存档版本，最新版本见 <a href="{{ .RelPermalink }}">{{ $latest.version }}</a>。
+  {{- else -}}
+  This is an archived version of this post. Read the latest version, <a href="{{ .RelPermalink }}">{{ $latest.version }}</a>.
+  {{- end -}}
+</div>
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

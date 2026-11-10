@@ -1,0 +1,18 @@
+{{- /* Icon links to code and datasets. One URL per line inside the shortcode; the label is
+       the repo path for GitHub and the dataset name for Hugging Face. */ -}}
+<div class="resource-links">
+  {{- range split (trim .Inner "\n ") "\n" }}
+  {{- $url := trim . " " }}
+  {{- with $url }}
+  {{- $u := urls.Parse . }}
+  {{- $parts := split (strings.Trim $u.Path "/") "/" }}
+  {{- if strings.Contains $u.Host "github.com" }}
+  <a class="resource-link" href="{{ . }}">{{ (resources.Get "icons/github.svg").Content | safeHTML }}<span>{{ delimit (first 2 $parts) "/" }}</span></a>
+  {{- else if strings.Contains $u.Host "huggingface.co" }}
+  <a class="resource-link hf" href="{{ . }}">{{ (resources.Get "icons/huggingface.svg").Content | safeHTML }}<span>{{ index $parts (sub (len $parts) 1) }}</span></a>
+  {{- else }}
+  <a class="resource-link" href="{{ . }}"><span>{{ $u.Host }}{{ $u.Path }}</span></a>
+  {{- end }}
+  {{- end }}
+  {{- end }}
+</div>

@@ -36,6 +36,21 @@
 </script>
 {{- end }}
 {{- if .IsPage }}
+<script>
+  // Mark table columns whose body cells are all numeric so CSS can right-align them.
+  document.querySelectorAll('.post-content table:not(.highlighttable)').forEach(function (table) {
+    var rows = Array.prototype.slice.call(table.rows);
+    var body = rows.filter(function (r) { return r.parentNode.tagName === 'TBODY'; });
+    var cols = rows.reduce(function (n, r) { return Math.max(n, r.cells.length); }, 0);
+    var numeric = /^[\s$≥≤<>~+−-]*[\d.,]+\s*%?$/;
+    for (var c = 1; c < cols; c++) {
+      var isNum = body.length && body.every(function (r) {
+        return r.cells[c] && numeric.test(r.cells[c].textContent.trim());
+      });
+      if (isNum) rows.forEach(function (r) { if (r.cells[c]) r.cells[c].classList.add('num'); });
+    }
+  });
+</script>
 {{ partial "citations.html" . }}
 {{- end }}
 {{- /* Footer custom content area end */ -}}

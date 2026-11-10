@@ -1,0 +1,11 @@
+# Revision history of posts that keep archived versions, newest first.
+# A post opts in with front matter `versions: <key>` and `versionLang: en|zh`.
+ideaeval:
+  - version: v2
+    date: 2026-11-11
+    en: /posts/ideaeval
+    zh: /posts/ideaeval-zh
+  - version: v1
+    date: 2026-10-16
+    en: /posts/ideaeval-v1
+    zh: /posts/ideaeval-zh-v1

@@ -200,6 +200,9 @@ markup:
     startLevel: 2
     endLevel: 2
   goldmark:
+    parser:
+      # Emit standalone images outside <p> so render-image can wrap them in <figure>.
+      wrapStandAloneImageWithinParagraph: false
     extensions:
       passthrough:
         enable: true

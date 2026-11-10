@@ -12,9 +12,21 @@
     var start = parseInt(refList.getAttribute('start') || '1', 10);
     for (var i = 0; i < total; i++) refs[i].id = 'ref-' + (start + i);
 
-    var pattern = /\[(\d+(?:\s*,\s*\d+)*)\]/g;
-    function valid(nums) {
-      return nums.every(function (n) { return document.getElementById('ref-' + n); });
+    // Matches [3], [1, 2] and ranges such as [5–8].
+    var pattern = /\[(\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*)\]/g;
+    function exists(n) { return document.getElementById('ref-' + n); }
+    function valid(items) {
+      return items.every(function (it) {
+        return it.every(exists) && (it.length === 1 || +it[0] < +it[1]);
+      });
+    }
+    function link(n) {
+      var a = document.createElement('a');
+      a.className = 'cite-ref';
+      a.href = '#ref-' + n;
+      a.setAttribute('data-ref', n);
+      a.textContent = n;
+      return a;
     }
 
     var walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, {
@@ -32,18 +44,19 @@
       var text = node.nodeValue, last = 0, frag = document.createDocumentFragment(), m;
       pattern.lastIndex = 0;
       while ((m = pattern.exec(text))) {
-        var nums = m[1].split(',').map(function (s) { return s.trim(); });
+        var items = m[1].split(',').map(function (s) {
+          return s.split(/[–-]/).map(function (n) { return n.trim(); });
+        });
         // Skip brackets that are not citations, e.g. the interval [10, 50].
-        if (!valid(nums)) continue;
+        if (!valid(items)) continue;
         frag.appendChild(document.createTextNode(text.slice(last, m.index) + '['));
-        nums.forEach(function (n, k) {
+        items.forEach(function (it, k) {
           if (k) frag.appendChild(document.createTextNode(', '));
-          var a = document.createElement('a');
-          a.className = 'cite-ref';
-          a.href = '#ref-' + n;
-          a.setAttribute('data-ref', n);
-          a.textContent = n;
-          frag.appendChild(a);
+          frag.appendChild(link(it[0]));
+          if (it.length > 1) {
+            frag.appendChild(document.createTextNode('–'));
+            frag.appendChild(link(it[1]));
+          }
         });
         frag.appendChild(document.createTextNode(']'));
         last = m.index + m[0].length;

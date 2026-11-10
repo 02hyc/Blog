@@ -13,10 +13,14 @@
   {{- end -}}
 {{- end -}}
 {{- $attributes := merge .Attributes (dict "alt" .Text "src" $src "title" (.Title | transform.HTMLEscape) "loading" "lazy") -}}
+{{- /* A standalone image with alt text becomes a figure whose caption is that text. */ -}}
+{{- $caption := and .IsBlock .Text -}}
+{{- if $caption }}<figure>{{ end -}}
 <img
   {{- range $k, $v := $attributes -}}
     {{- if $v -}}
       {{- printf " %s=%q" $k $v | safeHTMLAttr -}}
     {{- end -}}
   {{- end -}}>
+{{- if $caption }}<figcaption>{{ .Text | safeHTML }}</figcaption></figure>{{ end -}}
 {{- /**/ -}}

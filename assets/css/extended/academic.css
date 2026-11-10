@@ -384,6 +384,39 @@ summary:focus-visible {
     letter-spacing: 0.025em;
 }
 
+.post-versions {
+    margin-bottom: 0.25rem;
+    color: var(--secondary);
+    font-size: 0.78rem;
+    letter-spacing: 0.025em;
+}
+
+.post-versions .post-version {
+    margin-left: 0.3em;
+}
+
+.post-versions a.post-version {
+    color: var(--accent);
+}
+
+.post-versions .current {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.post-archived-note {
+    margin: 0.6rem 0 0.4rem;
+    padding: 0.5rem 0.75rem;
+    border-inline-start: 3px solid var(--accent-hover);
+    background: var(--paper);
+    color: var(--secondary);
+    font-size: 0.8rem;
+}
+
+.post-archived-note a {
+    color: var(--accent);
+}
+
 .post-meta {
     align-items: center;
     color: var(--secondary);
@@ -467,6 +500,13 @@ summary:focus-visible {
     color: var(--secondary);
     font-size: 0.8rem;
     line-height: 1.6;
+}
+
+/* Under a "References" heading the heading's own rule is the separator. */
+.post-content > h2 + ol:last-child {
+    margin-top: 1rem;
+    padding-top: 0;
+    border-top: 0;
 }
 
 .post-content > ol:last-child li {
@@ -565,30 +605,69 @@ summary:focus-visible {
     text-transform: uppercase;
 }
 
+/* Tables: three-rule academic style. Text reads left-aligned; columns that hold only
+   numbers are marked .num by a footer script and right-aligned on tabular figures. */
 .post-content table {
     display: block;
     width: max-content;
     max-width: 100%;
-    margin: 1.4rem auto;
+    margin: 1.8rem auto;
     overflow-x: auto;
-    border-top: 1px solid var(--border);
-}
-
-.post-content table:not(.highlighttable) th,
-.post-content table:not(.highlighttable) td {
-    text-align: center;
-}
-
-.post-content table:not(.highlighttable) th:first-child,
-.post-content table:not(.highlighttable) td:first-child {
-    text-align: left;
+    border-collapse: collapse;
+    border-top: 1.5px solid var(--primary);
+    border-bottom: 1.5px solid var(--primary);
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    line-height: 1.5;
 }
 
 .post-content table th,
 .post-content table:not(.highlighttable, .highlight table, .gist .highlight) td {
-    padding: 0.6rem 0.75rem;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.92rem;
+    padding: 0.5rem 0.9rem;
+    border-bottom: 0;
+    text-align: left;
+    vertical-align: top;
+}
+
+.post-content table thead th {
+    padding-top: 0.6rem;
+    border-bottom: 1px solid var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+    vertical-align: bottom;
+}
+
+.post-content table tbody tr:first-child td {
+    padding-top: 0.65rem;
+}
+
+.post-content table tbody tr:last-child td {
+    padding-bottom: 0.65rem;
+}
+
+.post-content table:not(.highlighttable) tbody td:first-child {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.post-content table:not(.highlighttable) th.num,
+.post-content table:not(.highlighttable, .highlight table, .gist .highlight) td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.post-content table:not(.highlighttable) th:first-child,
+.post-content table:not(.highlighttable, .highlight table, .gist .highlight) td:first-child {
+    padding-left: 0.25rem;
+}
+
+.post-content table:not(.highlighttable) th:last-child,
+.post-content table:not(.highlighttable, .highlight table, .gist .highlight) td:last-child {
+    padding-right: 0.25rem;
+}
+
+.post-content iframe {
+    margin: 2rem 0;
 }
 
 .post-content img {
@@ -597,12 +676,63 @@ summary:focus-visible {
     border-radius: 0;
 }
 
+.post-content figure {
+    margin: 1.5rem 0;
+}
+
+.post-content figure img {
+    margin: 0 auto;
+}
+
 .post-content figure > figcaption {
+    margin: 0.65rem 0 0;
     color: var(--secondary);
     font-family: var(--sans);
-    font-size: 0.76rem;
+    font-size: 0.8rem;
     font-weight: 400;
-    text-align: center;
+    line-height: 1.6;
+    text-align: start;
+}
+
+/* Code and dataset links: compact chips with the GitHub / Hugging Face mark. */
+.resource-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1.4rem 0;
+}
+
+.post-content a.resource-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.32rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--theme);
+    color: var(--primary);
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    line-height: 1.3;
+    text-decoration: none;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.post-content a.resource-link:hover {
+    border-color: var(--secondary);
+    background: var(--paper);
+    color: var(--primary);
+}
+
+.resource-link svg {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
+}
+
+.resource-link.hf svg {
+    fill: #ff9d00;
 }
 
 .toc {
@@ -986,4 +1116,15 @@ summary:focus-visible {
         color: #000;
         font-size: 11pt;
     }
+}
+
+/* Keep KaTeX's visually hidden MathML anchored to its formula, and let wide display math
+   scroll on its own instead of widening the page on phones. */
+.post-content .katex {
+    position: relative;
+}
+
+.post-content .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
 }
