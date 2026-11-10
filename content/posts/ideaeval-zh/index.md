@@ -8,128 +8,120 @@ tags: ["Auto Research", "Idea Evaluation", "LLM Agents"]
 categories: ["Research"]
 showToc: true
 TocOpen: false
+versions: ideaeval
+versionLang: zh
 translation: /posts/ideaeval
 translationLabel: "English"
 _build:
   list: never
 ---
 
-本文的标题本来计划作为自今年三月起的一项工作的论文题目，但遗憾最终文章没能问世。我们在 idea 评估这个议题上做了一些的尝试和探索，尽管因为一些因素终止了这个项目，但仍然期望整理出这个过程中的一些思考，为这个周期的努力留有一些公开的痕迹，也期望如果可能的话，能够为这个领域带来一些微末的启发。
+> **TL;DR**
+> 人类研究者依靠 research taste，在不做实验的情况下就能判断一个 idea 是否值得投入。我们尝试为 ideation 系统的评估拟合这种能力：构建一个对两份 proposal 做 pairwise 比较的 judge agent，并以研究社区后续的反馈（引用）作为校准信号。在由真实论文还原的 proposal pair 上，judge agent 与后续引用排序的一致率达到 **75–83%**。但只看两份 proposal 的标题，其准确率依然有 **约 73%**；在 75 对人工标注的 human–AI pair 上，准确率只有 **49.3%**，接近随机；从现有证据看，judge agent 判断的主要是选题热度、可引用性和包装完整度，而不是一个 idea 在领域已有知识下是否 sound、是否可行。
 
-## chapter 1
-在 2026 年 10 月份的当下，auto research 在领域内已经具有相当的热度，甚至开始滥用。截至 9 月，ICLR 2027 的 abstract 注册数突破了 6 万篇 [1]，而一年前的有效投稿还不到 2 万，十年前，这个数字是 490。Auto research 渗透到了科研的各个环节，极大缩短了工作的完成周期，顶会投稿数量也水涨船高。另一边，顶会审稿本身也被生成式 AI 渗透，审稿质量良莠不齐。
+{{< resource-links >}}
+https://github.com/02hyc/IdeaEval
+https://huggingface.co/datasets/Yukino13/IdeaEval-Bench
+https://huggingface.co/datasets/Yukino13/IdeaEval-Calibration
+https://huggingface.co/datasets/Yukino13/IdeaEval-Corpus
+{{< /resource-links >}}
 
-我们在年初就开始进行 auto research 的探索。春节期间，端到端 auto research 系统 FARS [2] 问世，全程直播自动化科研的全部流程，而最终产出的大部分工作都较为平庸。Agent 已具备将一份 proposal 转换成代码，并进行完整实验的能力，FARS 的一系列产出也证明了这个事情；而真正制约 auto research 质量的，是 agent 所产出 proposal 的质量。FARS 产出的大部分 proposal 都比较 trivial, 只是多个组件的简单拼接，其中也不乏很多实验执行失败的 proposal。如果 agent based 的 ideation 系统能够自主提出有价值、有创新性的 proposal，就能打通高质量 auto research 的最后一步。Proposal 是对一个 idea 的完整包装，包含完整的背景阐述、文献调研、假设提出、实验设计和预期结果等，是 ideation 系统的产物。因此，我们开始重点关注 agent 的 ideation 能力。
+自今年三月起，我们在 research idea 评估这个议题上做了很多的尝试和探索。本篇整理出这个过程中的一些思考，为这个周期的努力留有一些公开的痕迹和微末的启发。
 
-![](../ideaeval/figures/01-fars.svg)
+## The last step to high-quality auto research
+在 2026 年 11 月份的当下，auto research 已然泛滥。截至 9 月，ICLR 2027 的 abstract 注册数突破了 6 万篇 [1]，而一年前的有效投稿还不到 2 万，十年前，这个数字是 490。顶会投稿数量水涨船高，审稿本身也被 AI 渗透，质量良莠不齐。
 
-对一份 proposal 最好的评估，就是将其付诸实验并由其结果来判定。在一些场景中，这条路是走得通的。AlphaEvolve [3] 用 LLM 驱动程序的进化搜索，每个候选程序都由一个自动的 evaluator 打分，很快就能对每次迭代给出反馈；Anthropic 的 Automated Alignment Researcher [4] 研究 weak-to-strong supervision，一次微调实验不到两小时，agent 把预测结果提交给远程 API 就能直接拿到 PGR（performance gap recovered）分数；这类任务的共同点是 outcome-gradable：问题被事先定义好，有一个明确、可自动计算的指标，反馈周期以分钟或小时计，系统可以大量试错，直接朝着指标 hill-climb。
+必须承认的是，agent 已具备将一份 proposal 转换成代码，并进行完整实验的能力。我们在年初开发了端到端 auto research 系统 FARS [2]，并在春节期间全程直播自动化科研过程，成功产出大量具有真实代码和运行记录的 paper。但绝大部分产出都流于平庸，这源于 agent 所执行的 proposal 本身质量不足。大部分 agent 产出的 proposal 都比较 trivial, 只是多个组件的简单拼接，不乏很多几乎不可行的。
 
-但我们关注的 auto research 不是这样的场景。它面对的是开放的研究问题，没有一个预先定义好的指标直接说明一个 idea 好不好；即使把 proposal 付诸实验，从写代码、跑实验到分析结果，完成周期也通常以周甚至月为单位，是一个非常典型的 long horizon 场景。一个 proposal 对领域的价值还要看 paper 发表之后的社区反应，这个反馈周期以年计。这样的时间成本是 ideation 的搜索过程无法承受的，并且一旦一个非常不可靠的 proposal 直接进入实验阶段，也会浪费大量的实验资源。因此一个能够在 ideation 阶段就对 proposal 进行评估的系统非常重要：它要在缺少直接反馈信号的情况下，提前做出判断，所以其本身也必须足够可信。
+我们认为 proposal 的质量是 auto research 的关键瓶颈，如果 ideation 系统能够自主提出有价值、有创新性的 proposal，就能打通高质量 auto research 的最后一步。因此，我们开始重点关注 agent 的 ideation 能力。
 
-然而针对 proposal 的评估，一直是领域中尚不成熟的部分。最直接的做法是写一份 rubric，让 agent 按维度打分。FARS 的 ideation 模块正是这样做的：pipline 中的评审 agent 从 insight depth、importance、significance、soundness、feasibility 等 7 个维度给 proposal 打分，加权得到总分。评审 agent 的打分并没有依赖其他外部信号进行校准而全凭其自由发挥，结果是筛选出了一批平庸的 idea，这需要进一步完善，通过一些外部信号来校准这一过程。
+![FARS pipeline: research direction, ideation, planning, experiment, writing, paper; all stages share one workspace](../ideaeval/figures/01-fars.svg)
 
-Idea 的评估，或 idea 的选择，对人类研究者而言，涉及到研究品味 research taste 的判断。领域内已经有不少 benchmark 和 evaluator 尝试利用不同的信号对这一过程进行建模和评测，但都存在一定的局限性。
+## Ways to evaluate a research idea
+问题就在于 ideation 系统所产出的 proposal 质量如何衡量。一般而言，一份 proposal 最好的评估，就是将其付诸实验并由结果来判定。AlphaEvolve [3] 用 LLM 驱动程序的进化搜索，每个候选程序都由一个自动的 evaluator 打分，并迭代反馈；Anthropic 的 Automated Alignment Researcher [4] 研究 weak-to-strong supervision，一次微调实验不到两小时，agent 把预测结果提交给远程 API 就能直接拿到 PGR（performance gap recovered）分数；这类任务的共同点是 outcome-gradable：问题被事先定义好，有一个明确、可自动计算的指标，反馈周期以分钟或小时计，系统可以大量试错，直接朝着指标 hill-climb。
 
-#### 以真实论文为参照
+但我们关注的 auto research 是更通用的场景，面对的是开放的研究问题，若把 proposal 付诸实验，从写代码、跑实验到分析结果和迭代，完成周期也通常以周甚至月为单位，这种时间成本是 ideation 过程无法承受的，且一旦一个极不可靠的 proposal 直接进入实验阶段，也会浪费大量实验资源。因此需要考虑别的方式。
 
-这类工作的思路是让 ideation 系统去拟合一篇已经发表的论文：取一篇 target paper，将其发表前能拿到的 context 交给模型，如参考文献、研究背景和研究问题等，让模型生成 idea，再看生成的 idea 与目标论文有多接近。
+在一般的科研过程中，人类研究者依赖其在研究生涯中积累的 research taste 来对一个 idea 进行事前的评估，他们往往能够凭借过往的研究经验，并结合研究领域的现状，在不经过完整实验的情况下判断一个 idea 是否可靠且具有价值，并以此决定是否投入后续的探索。这很符合我们所期望的 ideation 系统的评估方式。若 ideation 的评估系统也能够具有这种 research taste，就能够在 ideation 阶段对 proposal 给出直接的评估和反馈，从而将那些不值得后续投入的 proposal 直接筛去。
 
-- **IdeaBench** [5] 收集了 2,374 篇生物医学论文，把每篇论文 background 部分引用的参考文献摘要交给模型生成 idea，再用语义相似度和 LLM 打分衡量生成的 idea 与目标论文的重合程度。
-- **AI Idea Bench 2025** [6] 把范围换到 AI 领域，选取 GPT-4o knowledge cutoff 之后发表的 3,495 篇顶会论文，为每篇挑出 5 篇最直接相关的参考文献作为输入，以 target paper 的 motivation 和实验计划作为 ground truth，用选择题、相似度打分等方式衡量对齐程度。
-- **ResearchBench** [7]（及其前身 MOOSE-Chem [8]）把科学发现拆成三步：从候选论文中找出真正启发了目标工作的 inspiration，把研究背景和 inspiration 组合成假设，让 agent 在多个候选假设中选择出最符合 target paper 的那个。
+因此我们需要去拟合出这种 research taste，并以此作为 ideation 系统的评估标准。如何去量化这种 research taste 呢？领域中已有不少工作直接对 idea 的评估进行建模和评测，它们虽然大多并未以 research taste 为目标，但都选取了某种信号作为评判 idea 好坏的 ground truth，可以看作是对 research taste 的不同近似。然而这些信号都存在一定的局限性。
 
-这类方法的好处是 ground truth 可靠，构造容易规模化。但它衡量的其实是拟合 target paper 的能力，而不是提出好 idea 的能力，评测的能力偏了。同一个研究问题下值得做的 idea 远不止被发表的那一个，若 ideation 系统生成了一个与真实论文思路不同、但客观上同样有价值的 proposal，这套评测就失效了。
+![Evaluation signals on an idea's timeline. When the idea is proposed, before any experiment: expert ratings [9][10] and novelty checks [14]. After experiments: experimental outcomes [15] and hypothesis verification [16][17]. At publication: matching the published paper [5–8] and acceptance or reviews [11–13]. Months to years later: citations and awards [18][19]. Earlier signals are noisy or partial; complete signals arrive only after the fact. Research taste means predicting, at the moment an idea is proposed, what the community will say later](../ideaeval/figures/16-signal-timeline.svg)
 
-#### 以人类专家标注为标签
+### Published papers as ground truth
 
-另一个自然的做法就是直接由领域专家对 idea 进行评估，这类信号又可以分为两种。
+这类工作把 research taste 近似为“能否想到已被发表的那个 idea”，但它衡量的其实是复现 target paper 的能力，而非判断 idea 好坏的能力。具体做法是把 target paper 发表前可获得的 context 交给模型，看生成的 idea 与原论文有多接近：IdeaBench [5] 以 2,374 篇生物医学论文所引用的参考文献摘要为输入，用语义相似度和 LLM 打分衡量重合度；AI Idea Bench 2025 [6] 在 3,495 篇 AI 顶会论文上以 motivation 和实验计划为 ground truth；ResearchBench [7]（及其前身 MOOSE-Chem [8]）则把科学发现拆为 inspiration 检索、假设组合与假设排序三步。这类 ground truth 可靠且易于规模化，但同一问题下值得做的 idea 远不止被发表的那一个，一个思路不同但同样有价值的 proposal 会被直接判错。
 
-第一种是请专家按设置的多个维度打分。最有代表性的是 Stanford Si 等人 [9] 的大规模人类专家实验：100 多位 NLP 研究者盲评人类专家与 LLM 写的 idea，结果 LLM 的 idea 在新颖性上得分显著更高。但同一项研究也暴露了这种信号本身的问题：评审之间的一致性只有 56.1%，低于 NeurIPS、ICLR 正式审稿的水平。
+### Expert judgment as ground truth
 
-Anthropic 的 **TASTE** [10] 则把专家判断做成了一个 pairwise benchmark：用 Claude Opus 4.6 生成 AI safety 方向的研究 proposal，请 10 位 AI safety 研究者打分、两两讨论后再修正，最终筛出 92 对偏好明确的 proposal。我们的做法和这有类似之处，但在我们的工作周期中还尚未发表此篇工作，因而当时对这部分的理解还尚不深刻。
+这是对 research taste 最直接的近似：让具有 taste 的人来判断。但专家的 taste 本身噪声大，也难以规模化。Si 等人 [9] 组织 100 多位 NLP 研究者盲评人类与 LLM 写的 idea，评审间的一致性仅有 56.1%，低于 NeurIPS、ICLR 正式审稿的水平；Anthropic 的 **TASTE** [10] 请 10 位 AI safety 研究者对 Claude Opus 4.6 生成的 proposal 打分、讨论并修正，最终只保留了 92 对偏好明确的 pair（该工作与我们的思路相近，但在我们的工作周期内尚未发表）。**GraphEval** [11]、**InnoEval** [12]、**ScholarEval** [13] 退而以 ICLR、NeurIPS 等会议的录用结果或审稿意见为标签，获取成本更低，但录用结果混杂了写作质量、实验完成度、审稿人匹配、投稿时机等因素，与 idea 本身的价值仍有不小的 gap。
 
-第二种是以会议的录用结果或审稿意见为标签。**GraphEval** [11] 用 ICLR 2021–2023 投稿的 abstract 和录用结果做训练和测试；**InnoEval** [12] 用 ICLR 2025 和 NeurIPS 2025 的论文，把任务设成 reject/accept 或 reject/poster/highlight 的分类，从 clarity、validity、novelty、feasibility、significance 五个维度做基于检索的评估；**ScholarEval** [13] 则从 ICLR 2025 和 eLife 的审稿意见中抽取针对 idea 本身的评价，整理成 rubric，看系统给出的评价能否覆盖专家指出的要点。这类信号比招募专家打分更容易获得，也更接近真实的同行评议。但录用与否其实混杂了写作质量、实验完成度、审稿人匹配、投稿时机等太多噪声因素，与一个 idea 本身的价值仍有不小的 gap。
+### A single verifiable dimension as ground truth
 
-#### 以单一可验证维度为标准
+这类工作把 research taste 拆解为某个可以客观检验的侧面，结果可靠，但 taste 恰恰体现在对多个维度的综合权衡上。Literature-Grounded Novelty Assessment [14] 只评 novelty，检索相关文献后按 purpose、mechanism、evaluation 等 facet 逐一比对；Forecasting Research Success [15] 只评实验结果，在一万多对 idea 上预测哪个能在同一 benchmark 上表现更好；TruthHypo [16] 和 HypoBench [17] 只评假设的真实性与解释力，分别以后续文献和合成数据的真实生成机制为参照。然而一个 novel 的 idea 可能毫无意义，一个能在 benchmark 上提点的 idea 也可能只是又一个工程 trick，这正是 FARS 产出的典型问题；并且它们评的多是单个假设或方法，而非一份完整的 proposal。
 
-这一类工作不再对 idea 做整体判断：
+### Later community feedback as ground truth
 
-- **只评 novelty**。Literature-Grounded Novelty Assessment [14] 先检索与 idea 最相关的文献，再按 purpose、mechanism、evaluation 等核心 facet 重排；只要 idea 在至少一个 facet 上与所有检索到的论文都不同，就判为 novel。
-- **只评实验结果**。Forecasting Research Success [15] 从 Papers with Code 的 leaderboard 出发，构造了一万多对 idea，让模型预测在同一个 benchmark 上哪个 idea 的结果更好。
-- **只评真实性或解释力**。TruthHypo [16] 在生物医学知识图谱上按时间切分，检查模型基于旧知识提出的假设能否被后来的文献证实，并以假设能否被已有文献和知识图谱支撑作为其 groundedness；HypoBench [17] 则看生成的 hypothesis 能否解释给定的观测数据，在合成数据上直接与真实的数据生成机制比对。
+这类工作把 research taste 近似为对 idea 长期影响力的预判，这是与 idea 真实价值最接近的信号。**Proof of Time** [18] 给 agent 某个时间点之前的证据快照，让它预测之后的论文引用与奖项、研究者的方向变化或 benchmark 的性能区间；**AI Can Learn Scientific Taste** [19] 直接把 scientific taste 定义为判断和提出高影响力 idea 的能力，从 210 万篇 arXiv 论文中构造约 72 万对同领域、同时期的论文，以引用高低为标签训练 Scientific Judge，再以其为 reward model 训练提出 follow-up idea 的 Scientific Thinker。
 
-这些评测在各自的维度上客观得多，结果也能被直接检验。但一个 idea 的价值从来不只由新颖性或提点决定：一个 novel 的 idea 可能毫无意义，一个能在 benchmark 上提点的 idea 也可能只是又一个工程 trick，这也恰恰是 FARS 产出的典型问题。并且它们评的往往是一个假设或一个方法，而不是一份包含问题定义、实验设计和预期结果的完整 proposal。
+但现有工作评估的是论文的 title 和 abstract，其中往往已经包含实验结果与结论，本质上是事后判断，而 research taste 的关键恰恰在于事前。不过这类工作给了我们一个重要启发：人类研究者的 taste 正是在反复观察 idea 后续被社区采纳或遗忘的过程中积累起来的。因此，若能将 ideation 阶段对 proposal 的事前评估与其后续的社区反馈对齐，就是在拟合这种 research taste。这正是这项工作的出发点。
 
-#### 以社区的后续反馈为标签
+## Judging an idea against its time
+要把对 idea 的事前评估 (research taste) 与事后反馈 (community feedback) 对齐，我们先梳理一个 idea 从提出到产生价值的过程。
 
-这一类工作以后续社区反馈为标签来评估 idea 的价值。
+一个 idea 总是针对某个 research question、在某个时间点提出的。它的价值一方面取决于提出时领域已有的知识，另一方面取决于它被做出来之后对后续工作的影响；同样的 idea 在不同时间点提出，价值可能截然不同。我们记 t 时刻领域的 knowledge base 为 $K_t$，记 proposal 的核心 hypothesis 为 $H$，将 idea 的价值定义为在 $K_t$ 下推进 $H$ 能为未来 knowledge base 带来的期望增量：
 
-- **Proof of Time** [18] 把评估设计成一个时间上的预测问题：给 agent 某个时间点之前的证据快照，让它预测之后才的结果，比如 2025 年 ACL/NAACL/EMNLP 论文的引用高低和奖项等级、某位 prof 下一年的研究方向以及某个 benchmark 未来的性能区间。
-- **AI Can Learn Scientific Taste** [19] 把 scientific taste 定义为判断和提出具有长期影响力的 idea 的能力，并提出 RLCF（Reinforcement Learning from Community Feedback）。它从 210 万篇 arXiv paper 中构造了约 72 万对同领域、同时期的论文，以引用高低为标签，并训练 Scientific Judge 判断两篇 paper 中的更高引用者；再以 Scientific Judge 为 reward model，训练 Scientific Thinker 根据一篇 seed paper提出 follow-up idea 的能力。
+$$V(H, K_t) = \mathbb{E}[\Delta K \mid H, K_t]$$
 
-但是这两个工作距离 ideation 场景的实际评测落地还有距离。**AI Can Learn Scientific Taste** 的评估对象是 paper 的 title 和 abstract，而这往往已经包含了实验结果和结论，这与 ideation 阶段的 proposal 不是同一种对象，但其使用的社区反馈信号对我们的工作具有启发意义。正如前文所言，一份 proposal 的真实价值本身由其实验结果和后续的社会反馈决定，而获取这种反馈信号的时间周期和成本是不可接受的。是否可以将在 ideation 阶段对 proposal 的评估和后续的社区反馈信号对齐？若能实现，则我们可以在 ideation 阶段就对 proposal 进行可信的评估，并决定资源分配和优化方向。这正是我们这个工作的探索方向和理想图景。
+在这个定义下，research taste 就是在 $H$ 被执行之前估计 $V(H, K_t)$ 的能力。$V$ 有三个性质：
+1. 它是一个预测。 $V$ 的真实取值要等 idea 被执行、被社区接纳后才能显现，评估系统只能在 $K_t$ 下给出预期。
+2. 它需要用社区反馈来校准。 历史上哪些 idea 后来被采用、被继承、被反复比较，就是 $V$ 的后续观测值。
+3. 它适合做相对比较。 一个 idea 的绝对价值没有可靠的客观标签，也难以直接校准；在同一 research question、同一 $K_t$ 下比较两份 proposal 要简单得多。这也契合 ideation 系统的工作方式：在同一 $K_t$ 下反复进行 “生成—评估—修缮” 的比较与迭代，理论上就能逐渐逼近更好的 idea。
 
-一个 idea 基于一个 research question 提出，其价值一方面应该是取决于被提出的那一刻，该领域已有的 knowledge base，另一方面取决于被做出来后，后来的工作怎样因之而影响。一个 idea 被提出的时间节点至关重要，针对同样的 research question，不同时间节点下，领域的 knowledge base 是不同的。形式化表示下，我们记 t 时刻的领域 knowledge base 为 $K_t$，记一个 idea 的 hypothesis 为 $H$，则我们将一个 idea 的价值形式化表示为 $V(H, K_t)$，表示其预期能为未来的 knowledge base 带来多少增量。我们认为其应当有如下的含义：
-1. $V(H, K_t)$ 是基于 $K_t$ 的一个预测的增量价值，一份 proposal 本身的真正价值，要由其被执行、被社区接纳后才能显现。
-2. $V(H, K_t)$ 的评估和预测，应该通过社区反馈信号进行对齐：历史上哪些 idea 后来被社区采用、被继承、被反复比较，以此来对齐 idea 价值评估的模式。
-3. $V(H, K_t)$ 应当是一个相对的价值比较，而不是一个绝对分数。本身并没有一个很好的客观标签能够衡量一个 idea 的价值，并且很难直接校准。与之相比，相对价值的比较是一个更简单的任务。这点和我们所设想的 ideation 系统形式也一致，ideation 系统可能一次产出多个 proposal，只要在同一个 research question 的 $K_t$ 下，比较这些 proposal 的相对价值并反复迭代这一“生成-评估-修缮”的 loop，理论上能逐渐逼近一个最优的 idea。
+![Envisioned ideation loop: a Seeder generates proposals, a Filter removes invalid ones, a pairwise Ranker updates Elo scores in the candidate pool, an Evolver revises the top proposals, and the best one is delivered](../ideaeval/figures/02-evolution.svg)
 
-![](../ideaeval/figures/02-evolution.svg)
+历史是一个迟到的评估者：一个 idea 的价值，往往要很久之后才由社区给出答案。我们的思路是借助这些已经沉淀的社区反馈来拟合事前的评估：把历史 paper 还原成实验前的 proposal，以它们后来获得的社区反馈为标签，构造一个 idea 评估的 benchmark。它一方面用于校准评估系统本身，另一方面用于评估 ideation 系统产出的 proposal。构造这个 benchmark 需要回答三个问题：评估应当采用什么形式？如何找到共享同一 $K_t$ 的 proposal？用什么社区信号作为标签？
 
-历史本身就是一个迟到的评估者，如果能在 ideation 阶段就提前对 proposal 进行评估将具有重要意义。我们期望能够通过历史社区反馈信号，以及将历史 paper 还原成 proposal 的形式，去探索对 idea 评估的模式。我们通过历史的 paper 数据和相关可用信号，不断地进行回测和尝试，最终设计出了期望的 idea 评估模式，并据此构造出 idea 评估的 benchmark。我们期望通过这个 benchmark，一方面能够用于优化 idea 评估系统本身，另一方面能够用于评估 ideation 系统生成的 proposal，从而选择出更有价值的 proposal。
+## Turning history into a ruler
+### Compare proposals only against their contemporaries
+由于 $V(H, K_t)$ 适合做相对比较，且比较必须在相同的 $K_t$ 下进行，评估的基本单位就是同一 $K_t$ 下的一对 proposal。我们近似地认为研究同一个 research question、在同一个短时间窗口内发表的 paper，共享相同的 $K_t$，由它们还原出的 proposal 也彼此可比。ideation 系统若在窗口起点 $t$ 针对同一 research question 产出 proposal，它能利用的同样只有 $K_t$，因此也可以与这些人类 proposal 直接比较。
 
-## chapter 2
-我们首先思考如下的几个问题：idea 的评估形式应当是怎样的？怎样构造 benchmark？用什么历史信号来作为 idea 评估的标准？
+在这一形式下，评估系统就是一个 pairwise ranker，一方面在两份人类 proposal 之间做判断，再用它们后来的社区反馈检验判断是否正确，这是校准（calibration）；校准可信之后，再把 AI proposal 与同一窗口内的每一份人类 proposal 逐一比较，以胜率衡量 ideation 系统的能力，这是评测（ideation）。因此，benchmark 构造的目标，就是找出足够多共享同一 $K_t$ 的 paper。
 
-### idea 的评估形式应当是怎样的？
-$V(H, K_t)$ 是一个相对的价值比较，且应当限定在相同的 $K_t$ 下。我们假设人类研究社区中，研究同一个 research question 并且在同一个时间周期内产出 paper 所基于的 $K_t$ 是相同的，因此基于这些 paper 所还原出的 proposal 将具备可比性。若 ideation 系统也基于同样的 research question 及其 $K_t$ 产出 proposal，则这和真实的人类研究者的 proposal 也具备可比性。这就是我们所期望的 idea 评估模式。因此 benchmark 构造上，目标是找出足够多共享同一 $K_t$ 的一批 paper。这一模式中，idea 评估系统需要能够在相同的 $K_t$ 下，对两份 proposal 给出一个可信的相对评价，我们认为应该能够借助历史社区反馈信号对齐来这一评价过程。
+![K_t is the work on one research question published before cutoff t. Human proposals from the next 31 days build on the same K_t, and an AI proposal generated at t can only draw on K_t. A pairwise ranker compares two human proposals and is checked against later citations (calibration), then compares the AI proposal with every human proposal in the cohort (ideation)](../ideaeval/figures/03-comparison.svg)
 
-![](../ideaeval/figures/03-comparison.svg)
+### Carving the literature into cohorts
+共享同一个 $K_t$ 需要两个条件：研究同一个 research question，且在同一段时间内发表。一个自然的思路是先按 research question 对文献聚类，再在每个类内按时间切分窗口。
 
-### 怎样构造 benchmark?
-怎么找到足够多共享同一个 $K_t$ 的 proposal 集合？在构造 benchmark 上，我们主要考虑的问题是：用什么数据，怎样规模化地找 $K_t$，以及怎样把 paper 还原成 proposal。
+**数据选择** 历史 paper 必须晚于评估系统 base model 的 knowledge cutoff，否则模型可能在训练中见过它们。我们计划使用的 GPT-5.4 和 Opus 4.6，cutoff 均在 2025 年 8 月 [20][21]，因此选用 arXiv 上 2025 年 9 月至 2026 年 1 月的 AI 论文（cs.LG、cs.AI、cs.CL、cs.CV、stat.ML）。剔除 survey、纯 benchmark、纯数据集等不以研究假设为核心的 paper 后，共 35,505 篇。
 
-数据选择其实和 idea 评估系统息息相关。在 4 月份，我们预计会使用 GPT-5.4 或 Opus 4.6 作为 idea 评估系统的 base model，那所选择的历史 paper 数据的周期必须在 base model 的 knowledge cutoff 之后，以防止模型可能在训练数据中见过这批 paper 从而造成污染。GPT-5.4 的 knowledge cutoff 是 2025 年 8 月 31 日 [20]，而 Opus 4.6 的 training date cutoff 是 2025 年的 8 月 [21]，因而使用 arXiv 上 2025 年 9 月至 2026 年 1 月的 AI 相关论文（cs.LG、cs.AI、cs.CL、cs.CV、stat.ML）作为数据来源。
+**聚类** 我们按研究问题本身的语义做树状聚类，并用 cluster 的大小、而非语义规则来界定 research question 的粒度。这两点都来自最初方案的教训。最初我们给每篇 paper 抽取 topic、method family、used benchmark 等标签，按标签重叠度聚类，但标签重合并不等于研究同一个问题：SimpleTIR [22] 和 Inpainting-Guided Policy Optimization for Diffusion LLMs [23] 的标签几乎一致（RL、推理、数学 benchmark），一篇研究的却是工具调用的多轮 RL，另一篇是扩散语言模型的策略优化。同时，得到的 cluster 粒度悬殊且彼此存在重叠，而这种 research question 粒度很难用自然语言规则来约束。
 
-在剔除 survey、纯 benchmark 以及纯数据集等不以研究假设为核心的 paper 后，我们得到了 35,505 篇 paper。我们需要在这 35,505 篇 paper 中，找到足够多的 research question，然后再限定时间条件来构造出一批 $K_t$。一个自然的思路就是对 paper 依据 research question 进行聚类。
+具体实现上，我们参考 TaxoAdapt [24]，以 title、research problem、task formulation 和 used benchmark 为特征逐层聚类，一直细分到每个叶子节点包含 10 到 50 篇 paper，每个叶子即一个 research question。一、二级节点经过人工去重，每篇 paper 可属于 1 到 3 个节点。最终得到一棵 6 层、1,799 个叶子节点的树；为每个叶子归纳 research question 并逐篇核查后，剔除了 4,357 篇不相关的 paper。
 
-最初我们尝试给每篇 paper 抽取 topic、subtopic、contribution type、target object、task、method family、used benchmark 等标签，然后按标签的重叠程度分给不同的 cluster。但我们发现不少标签高度重合但实际并不符合语义要求的 paper 对，比如 *SimpleTIR: End-to-End RL for Multi-Turn Tool-Integrated Reasoning* [22] 和 *Inpainting-Guided Policy Optimization for Diffusion LLMs* [23]，两篇 paper 的标签几乎完全重合，都是强化学习、都做推理、都在数学 benchmark 上评测，但一篇研究工具调用的多轮 RL，另一篇研究扩散语言模型的策略优化，显然并不在研究同样的 research question。此外，有另一个问题也应该讨论，research question 的粒度如何定义？在这次聚类中，不同 cluster 之间的粒度存在较大的不均匀性，LLM、RL 等是粒度非常宽泛的 research question，再比如 GUI Agent 粒度也较宽泛，而 diffusion 加速采样则粒度较细；此外，不同 cluster 之间有一定程度的重叠，比如 "LLM Safety and Robustness" 和 "Adversarial Robustness and Defense"。我们最终认为，不该从粒度规则出发，因为本身很难依靠自然语言去约束筛选的粒度规则，而应该反过来，以最终每个 cluster 的大小区间作为 research question 的粒度。我们认为 cluster size 本身就是对粒度的一种操作性定义，并不通过粒度的语义属性，而直接通过其结果属性进行约束。
+**按时间切分窗口** 我们在每个 topic 内以 31 天为窗口切出 cohort：同一个 research question、同一个月内发表的一组论文，即对 "同一个 $K_t$" 的近似。这里的 topic 是子树总论文数不超过 150 的节点，而不是叶子节点，因为叶子节点论文太少，再按时间切开就没有足够的 paper 数量了。此外有些 paper 在上 arXiv 之前，已经以期刊或 OpenReview 投稿的形式公开。我们对全部论文做了 date leak 检查，修正了真实公开日期，并剔除了有问题的论文。
 
-具体实现上，我们参考了 TaxoAdapt [24] 的树状聚类方式。我们以每篇 paper 的 title, research problem, task formulation, used benchmark 作为聚类特征，逐层树状聚类，直到每个叶子节点都落在 [10, 50] 的 size 内。在树的一级、二级标签生成之后，为了防止在大方向上依然出现 research question 的重合，因而会进行人工去重；此外，在分配 paper 至标签节点时，我们允许一篇论文同时属于 1 到 3 个节点。最终，35,505 篇论文被组织成一棵 6 层的树，包含 1,799 个叶子节点。最后为每个叶子节点归纳 research question，并逐篇检查每个叶子节点并剔除不相关的 paper，这一过程剔除了 4,357 篇 paper。
+![Left: the corpus of 35,505 papers splits level by level until every leaf holds 10 to 50 papers. Research-question granularity is set by size: the highest node whose subtree holds at most 150 papers is a topic, itself a broader research question, and each leaf is a finer one. Right: one topic on a timeline cut into 31-day windows; each window is a cohort. Each leaf alone is sparse within a window, while the topic as a whole gives enough papers](../ideaeval/figures/04-taxonomy.svg)
 
-![](../ideaeval/figures/04-taxonomy.svg)
+### Rewinding papers into proposals
+找到 cohort 之后，还需要将其中 paper 还原成实验前的 proposal。还原遵循两条原则：不泄漏结果，并忠实于 paper 本身的研究计划。我们把 paper 的内容分为研究计划、先验知识和实验结果三类：结果全部移除，主结果表中提出方法的数字替换为 TBD，paper 的结论改写为待验证的假设；而与哪些 baseline 比较、做哪些消融、在哪些数据集上评测，则属于研究计划而完整保留。
 
-$K_t$ 还要求时间相同。我们在聚类树上取子树总论文数不超过 150 的节点作为大的 topic cluster，再在每个 topic cluster 内按 31 天的时间窗口将 paper 切分成不同的 cohort。一个 cohort，就是对"同一个 $K_t$"的近似：同一个 research question、同一个月内发表的一组论文。之所以在大的 topic cluster 而不是叶子节点上切分，是因为叶子节点平均论文数较少，再按时间窗口切开，每个窗口里剩下的论文太少，构不成有意义的比较。
+还原后的 proposal 统一为七节的固定结构：Introduction（核心洞见、可证伪的假设和潜在的失败模式）、Proposed Approach、Related Work、Experiments、Success Criteria、Impact Statement 和 References。ideation baseline 也按同一结构产出 proposal，两者因而可以直接比较，评估系统不会因为格式差异而偏向某一方。
 
-时间维度还带来了一个容易被忽略的问题：date leak。有些 paper 在挂上 arXiv 之前，已经以期刊、OpenReview 投稿等形式公开过，其真实公开早于 arXiv 日期。因而我们对所有论文做了一次全量的 date leak 检查，剔除了有问题的论文，调整了其真实的公开日期。
+![Paper to proposal: a paper's content is sorted into plan, prior knowledge, and results; results are removed, findings are rewritten as hypotheses, and the rest goes into a seven-section proposal template with results marked TBD](../ideaeval/figures/06-paper-proposal.svg)
 
-最后一步，是将 paper 还原成 proposal。我们设计了一个 paper-to-proposal 的 pipline，我们期望还原的 proposal 保有完整的文献调研，方法设计，以及实验设计和预计效果。转换过程遵循两条原则：不泄漏结果，以及忠实于 paper 本身的研究计划。将 paper 主结果表中提出方法的所有数字都替换为 TBD；和哪些 baseline 比较、做哪些消融、在哪些数据集上评测，属于实验设计部分，应该完整保留。转换后的 proposal 统一为固定的结构：Introduction（包括核心洞见、可证伪的假设，以及"方案潜在的失败模式"）、Proposed Approach、Related Work、Experiments、Success Criteria、Impact Statement 和 References。我们之后设计的 ideation baseline 也按照同样的结构产出 proposal，因而具有可比性。
+### Four-month citations predict the twelve-month ranking
+我们以同一 cohort 内 paper 的引用高低作为 which one is better 的标签。难点在于，这批 paper 在我们拉取数据时只发表了 4 到 8 个月。回测表明，只要两篇 paper 的引用差距足够大，早期的引用排序就已经与 12 个月后的排序高度一致。
 
-![](../ideaeval/figures/06-paper-proposal.svg)
+**社区信号的选择** 我们真正想衡量的是 idea 为领域 knowledge base 带来的增量，它无法直接观测，只能借助间接信号。会议评审分数是一个选项，但审稿质量参差、审稿人标准不一，公开数据也少。引用同样有噪声，会受机构和作者声誉的影响，但在同一 research question、同一时期内比较长期引用（发表后 12 到 18 个月）时，领域热度、发表时机等主要混淆因素会被抵消相当一部分；剩下的差异更多反映的是谁的方法被采用、谁的问题定义被继承、谁的结果被反复拿来比较，这更接近 idea 本身的价值。
 
-此外，在同一套聚类之上，我们最终构造了两个用途不同的 benchmark。
+**长期引用难以获取** 为避免数据污染，我们只能使用 2025 年 9 月之后的论文，而到 2026 年 5 月拉取引用时，它们只发表了 4 到 8 个月。等一年再评测并不现实，届时新模型的 knowledge cutoff 又会覆盖这批 paper：标签的可信需要时间，评测的有效却要求 paper 足够新。我们也尝试过按引用上下文给早期引用量加权来拟合长期引用的效果（例如 Background 0.5、Comparison 1、Use 和 Extension 1.5），但 Semantic Scholar API [25] 提供的引用上下文缺失较多，修正效果不佳，最终放弃。
 
-**Ideation benchmark** 用来评测 ideation 系统。我们从聚类树中人工挑选了 70 个具有一定领域热度的 topic，按 31 天的时间周期切分出 cohort。为了保证 cohort 内的 paper 质量，我们剔除了 cohort 中 citation count 为 0 的 paper，最终保留论文数不少于 10 篇的 cohort。最终的 ideation benchmark 包含 91 个 cohort，覆盖 40 个 topic。这里的 topic 即为 $K$，近似认为一个 cohort 中的 paper 都研究同一个 research question 且共享相同的 $K_t$。每个 cohort 中 paper 的最早公开日期的前一天作为 $t$。评测时，ideation 系统拿到一个 cohort 的研究方向和 cutoff 日期，生成一份 proposal，再看它能打败 cohort 中多少份人类 proposal。
-
-**Calibration benchmark** 用来校准 idea 评估系统本身：既然要让 idea 评估系统去评 AI 的 proposal，就得先确认它在人类 proposal 的历史数据上是否能判断得准。它由同一 topic 内、发表时间相差不超过 31 天的 paper 两两配对构成；我们还让其在 topic 分布上尽量贴近 ideation benchmark：最初版本构造了 260 对 pair，覆盖了 ideation benchmark 40 个 topic 中的 37 个。至于 which one is better 的偏序标签从哪里来，留待下节阐述。
-
-### 用什么历史信号来作为 idea 评估的标准？
-什么信号是衡量 idea 的 gold standard？我们真正期望评估的是一个 idea 对领域 knowledge base 的增量价值，这并没有办法直接观测。可用的历史社区反馈本身都是针对 paper 质量的衡量，这实际上和 idea 本身已经存在偏差，因此只能找一些间接的信号来作为标准。我们思考过使用会议评审的分数作为标准，但这存在问题。本身会议审稿质量存在较大差异，不同审稿人之间的标准并不一致，且可使用的公开数据量较少。与之相比，paper 的引用量 citation count 是一个更客观的信号。
-
-尽管 citation count 也存在噪声，依然受到学术机构、研究者声誉等因素的影响，但我们认为，在同一 research question 下、同一时期内比较 paper 的长期引用量（发表后 12 到 18 个月），是目前能拿到的最接近 idea 之间价值差异的客观信号。领域热度、发表时机、社区关注度这些主要的混淆因素，在限定研究领域以及相同时间周期的情况下会被抵消掉相当一部分；剩下的差异，更多反映的是谁的方法被别人采用了、谁的问题定义被继承了、谁的结果被反复拿来比较，这些更接近 idea 的真实价值。
-
-但这里存在一个矛盾。前文提到为了避免 base model 在训练数据中见过这批 paper，我们只能使用 2025 年 9 月之后的论文；而在我们拉取引用数据的 2026 年 5 月，这些 paper 才发表了 4 到 8 个月不等，远没有积累出长期引用。标签的可信需要时间，评测的有效却要求 paper 足够新。我们不可能等一年之后再来做评测，届时新模型的 knowledge cutoff 又会把这批 paper 覆盖掉。能否在引用窗口还相当初期之时，就还原出 paper 之间与长期引用一致的价值偏序关系？
-
-我们最初的直觉是：短期引用的噪声可能可以从 citation count 的语义角度进行修正。一篇 paper 被别人采用了方法、被拿来做对比实验、被在其基础上扩展，显然比在 related work 里被一笔带过更有分量。于是我们对引用发生的上下文做了分类，并尝试赋予不同的权重，例如 Background 0.5、Comparison 1、Use 1.5、Extension 1.5；我们进行了一定的尝试，但最终这个方式也存在很多限制。学术领域的数据基建并不完善，semantic scholar 有 api [25] 能够提供一篇 paper 被其他工作引用的上下文信息，但存在较多的数据空白，对修正质量造成较大影响。我们尝试了一些建模方式也最终无果。
-
-我们再次回到原始的 citation count。我们期望探索，在引用窗口还很早的时候，是否在某些限定条件下 paper 的引用偏序已经足够可信呢？为此我们做了一次回测。取 2024 年 1 至 5 月的 29,135 篇 AI 方向 arXiv paper，用与 benchmark 完全相同的方式聚类，再在每个聚类内按发表月份切出 cohort。分别统计每个 cohort 中 paper 在发表后 4 到 8 个月的引用数，这正是 benchmark 中 paper 在我们拉取引用数据时的实际引用积累周期，然后在每个 cohort 内为 paper 两两配对。在每个观察窗口下 (比如发表后 4 个月，5 个月... 直至 8 个月)，我们用当时的引用数在同一对 pair 内排序，再看这个排序与 12 个月后的排序是否一致。
-
-最终的结论是，当两篇 paper 的 citation count同时满足以下两个条件时，其引用偏序已经足够可信：
+**在历史数据上进行回测** 我们转而直接检验：早期的原始引用排序，是否在一定条件下能够和长期引用具有一致性？我们取 2024 年 1 至 5 月的 29,135 篇 AI 方向 arXiv paper，用与 benchmark 相同的方式聚类并按月切出 cohort，在 cohort 内两两配对，比较发表后 4 到 8 个月时的引用排序与 12 个月后的排序是否一致。结论是，当两篇 paper 的引用数 $c_a$、$c_b$ 同时满足以下两个条件时，早期排序已足够可信：
 
 $$|c_a - c_b| \ge 4 \quad \text{且} \quad |\log(1+c_a) - \log(1+c_b)| \ge 0.5$$
 
-前者是引用量的绝对差距，保证差距不是一两次偶然的引用造成的；后者是相对差距，保证差距相对于基数足够大。只看对数差距，会把 0 次对 1 次、1 次对 3 次这样的 pair 也放进来，它们的相对差距看上去很大，实际上只差一两次偶然的引用；只看绝对差距，又会放进 40 次对 44 次这样相对差距很小的 pair。两个条件同时满足时，可靠性最高，而覆盖率几乎没有损失。以 4 个月的窗口为例：
+绝对差距保证差异不是一两次偶然引用造成的，对数差距保证差异相对于基数足够大，两者缺一不可：只看对数差距，会放进 0 对 1、1 对 3 这样只差一两次引用的 pair；只看绝对差距，又会放进 40 对 44 这样相对差距很小的 pair。以 4 个月的窗口为例，同时满足两个条件时一致率最高，覆盖率与只看绝对差距几乎相同：
 
 | Filtering rule | Coverage | Agreement with 12-month ranking | Ranking flip rate |
 |---|---|---|---|
@@ -137,7 +129,7 @@ $$|c_a - c_b| \ge 4 \quad \text{且} \quad |\log(1+c_a) - \log(1+c_b)| \ge 0.5$$
 | Log gap only, $\text{log\_gap} \ge 0.5$ | 63.2% | 93.1% | 5.4% |
 | Both | 37.2% | 97.3% | 2.1% |
 
-在整个 4 到 8 个月的区间里，这条规则的表现如下：
+随着观察窗口延长，一致率从 97.3% 升至 99.4%，覆盖的 pair 也从 37.2% 增加到 49.9%：
 
 | Observation window | Pairs selected | Coverage | Agreement with 12-month ranking | Ranking flip rate |
 |---|---|---|---|---|
@@ -147,39 +139,47 @@ $$|c_a - c_b| \ge 4 \quad \text{且} \quad |\log(1+c_a) - \log(1+c_b)| \ge 0.5$$
 | 7 months | 7,248 | 47.9% | 99.0% | 0.7% |
 | 8 months | 8,667 | 49.9% | 99.4% | 0.3% |
 
-因此我们认为，在同一个 cohort 内，满足上述两条规则的 paper 对，其本身的 citation count 能够成为 which one is better 的代理信号。我们筛选的 calibration benchmark 中的 pair 正是基于这个规则。
+因此，在同一个 cohort 内，满足这两个条件的 paper 对，可以用引用高低作为 which one is better 的标签。
 
-## chapter 3
-有了 benchmark 以及可用的对齐信号后，接下来构造 idea 评估系统，需要验证其在历史数据上的一致性并基于此进行优化。
+### Two benchmarks from the same cohorts
+上述 cohort 和引用规则最终构成两个 benchmark，分别用于 pairwise ranker 的两种用途：calibration benchmark 是带引用标签的人类 proposal pair，检验 ranker 本身的可靠性；ideation benchmark 是一组 cohort，衡量 AI proposal 能胜过多少同期的人类 proposal。
 
-在我们设计的评估模式中，idea 评估系统实质上是一个 pairwise ranker。给定两份 proposal 和一个 cutoff 日期 $t$，ranker 需要判断，在相同的 $K_t$ 下，哪一份 proposal 的 $V(H, K_t)$ 更大。我们使用 GPT-5.4 和 Opus 4.6 作为 ranker 的 base model，并且设计了一套 rubric 作为评价的依据。
+|  | Calibration benchmark | Ideation benchmark |
+|---|---|---|
+| Purpose | Calibrate the ranker | Evaluate ideation systems |
+| Unit | Paper pairs from the same topic, published ≤ 31 days apart | A 31-day cohort within a topic |
+| Label | Order given by the citation rule | None needed; the ranker compares one by one |
+| Size | 260 pairs covering 37 topics | 91 cohorts covering 40 topics |
 
-我们最初设计的 ranker 架构由三部分组成：
-1. **Literature Review Agent**：在 cutoff 之前的文献中，对这对 proposal 共同的研究方向做一次全面的调研，产出一份 literature review，作为可复用的 $K_t$；
-2. **Parallel Analysis Agent**：在 literature review 的基础上，各自针对两份 proposal 做增量的检索，产出两份 analysis report，分别分析两份 proposal 在 $K_t$ 下的增量价值；
-3. **Judge Agent**：阅读 literature review 和两份 analysis report，并基于我们设计的 rubric，给出最终判断。
+**Calibration benchmark** 由同一 topic 内、发表时间相差不超过 31 天的 paper 两两配对构成，只保留满足上一节引用规则的 pair，引用较高的一方即为胜者。为了让校准结论能迁移到 ideation 评测，我们让它的 topic 分布尽量贴近 ideation benchmark：最初版本共 260 对，覆盖 ideation benchmark 40 个 topic 中的 37 个（下一章会说明我们为何又对它做了调整）。
 
-![](../ideaeval/figures/07-ranker.svg)
+**Ideation benchmark** 从聚类树中人工挑选的 70 个热门 topic 出发，按 31 天切出 cohort。为保证人类 proposal 的质量，剔除了零引用的 paper；为保证每个 cohort 有足够多的比较对象，只保留至少 10 篇 paper 的 cohort。最终剩下 91 个 cohort，覆盖 40 个 topic。每个 cohort 的 cutoff $t$ 取其中最早一篇 paper 公开日期的前一天。评测时，ideation 系统拿到 cohort 的研究方向和 $t$，生成一份 proposal，由 ranker 与 cohort 内的每一份人类 proposal 逐一比较，胜率即为该系统的得分。
 
-这里的 rubric 是我们对 Judge Agent 的优化方式，是一种 prompt 技巧。我们期望 Judge Agent 能够在 rubric 的指引下和 calibration benchmark 中的 pair 进行对齐，从而具备真实评测的可用性。
+## The judge was grading topics, not ideas
+有了 benchmark 和引用标签，下一步是构造 judge 并在历史数据上校准它。第一轮校准的结果看似不错，但随着探索的深入，结果愈发扑朔。
 
-rubric 的设计围绕 $V(H, K_t)$ 的定义出发。我们将其定义为：在 $K_t$ 下推进一个 idea，能为未来的 knowledge base 带来的期望增量，\:
+### A three-stage ranker with a non-compensatory rubric
+如前所述，idea 评估系统是一个 pairwise ranker：给定两份 proposal 和 cutoff 日期 $t$，判断在相同的 $K_t$ 下哪一份的 $V(H, K_t)$ 更大。我们以 GPT-5.4 和 Opus 4.6 为 base model，把评估拆成三个阶段：
+1. **Literature Review Agent**：在 cutoff 之前的文献中，对两份 proposal 共同的研究方向做一次全面调研，产出一份可复用的 literature review，作为 $K_t$ 的显式表示；
+2. **Parallel Analysis Agent**：在 literature review 的基础上，分别针对两份 proposal 做增量检索，产出两份 analysis report，分析各自在 $K_t$ 下的增量价值；
+3. **Judge Agent**：阅读 literature review 和两份 analysis report，依据 rubric 给出最终判断。
 
-$$V(H, K_t) = \mathbb{E}[\Delta K \mid H, K_t]$$
+![The Literature Review Agent builds a shared literature review from before t; two analysis agents examine proposals A and B against it; the Judge reads the review, both reports, and both proposals, and outputs which proposal is better](../ideaeval/figures/07-ranker.svg)
 
-这个期望既包含 proposal 本身的价值，也包含其被实现的概率。据此，rubric 要求 ranker 在以下几个因子上进行两两比较：
+rubric 是我们校准 judge 的主要提示手段。它把 $V(H, K_t)$ 拆成七个因子，要求 judge 在每个因子上对两份 proposal 两两比较，再综合给出 A ≻ B 或 A ≺ B。由于 $V$ 是期望增量，这些因子既覆盖 idea 成功后的价值，也覆盖其被做出来的概率：
 
 1. **Demand**：研究社区是否关注这个问题；
 2. **Marginal Contribution**：相对于已被社区吸收的工作，增量贡献有多少；
-3. **Realization Probability**：它的核心主张有多大可能被真正做出来；
-4. **Informative-Negative Value**：即便假设不成立，失败的结果是否仍然具有启发意义；
-5. **Adoptability**：如果成功，后续的工作能否使用或扩展它；
-6. **Experimental Credibility**：它的实验设计能否产生让社区信服的证据；
-7. **Cost or Risk**：它所需要的资源和承担的风险是否可控。
+3. **Realization Probability**：核心主张有多大可能被真正做出来；
+4. **Informative-Negative Value**：即便假设不成立，失败的结果是否仍有启发意义；
+5. **Adoptability**：如果成功，后续工作能否使用或扩展它；
+6. **Experimental Credibility**：实验设计能否产生让社区信服的证据；
+7. **Cost or Risk**：所需资源和承担的风险是否可控。
 
-这几个因素不是可以相互补偿的打分项，而是一个 idea 产生价值所必须依次经过的环节，任何一项接近零，其带来的领域增量价值 $\Delta K$ 也接近于零，一个维度的高分无法掩盖另一个维度的致命缺陷：重复已有工作意味着增量为零，站不住的前提意味着结果无法实现，薄弱的实验设计意味着拿不出可信的证据。Ranker 在每个因子上两两对比 proposal，最后综合输出 A > B 或 A < B 的判断。
+这七个因子不能互相补偿，这是一个 idea 产生价值必须依次通过的环节：任何一环接近零，$\Delta K$ 就接近零。重复已有工作则增量价值为零，不可靠的假设前提则实验结果无法实现，薄弱的实验设计则无法给出可信证据；一个维度的高分，无法补偿另一个维度的致命缺陷。
 
-最初构造的 calibration benchmark 共 260 对 pair，我们从中切出 60 对作为 dev set，其余 200 对作为 test set 进行后续的校准实验，结果如下：
+### The first calibration looked like a success
+在最初的 calibration benchmark 上，ranker 与引用排序的一致率约为 75%，明显高于随机和 "总是预测 A ≺ B" 的 baseline。我们从 260 对 pair 中切出 60 对作为 dev set，其余 200 对作为 test set（test 上为三次运行）：
 
 | Setting | Data | Accuracy |
 |---|---|---|
@@ -188,16 +188,17 @@ $$V(H, K_t) = \mathbb{E}[\Delta K \mid H, K_t]$$
 | Ranker (GPT-5.4) | dev | 78.3% |
 | Ranker (GPT-5.4) | test | 76.0% / 75.5% / 74.5% |
 
-按两篇 paper 的 citation gap 分桶，test set 上的准确率如下：
+按两篇 paper 的 citation gap 分桶，gap 在 50 以上的 15 对全部判对，与预期一致：引用差距越大，两份 proposal 的质量差异也越明显。不过 gap 在 50 以下时，准确率并没有随 gap 增大而单调上升：
 
 | Citation gap | 0–10 | 11–19 | 20–49 | 50+ |
 |---|---|---|---|---|
 | Pairs | 42 | 77 | 66 | 15 |
 | Accuracy | 76.2% | 67.5% | 78.8% | 100% |
 
-Citation count gap 在 50 以上的 pair 全部判对，这一定程度上和我们的预期一致，citation count gap 差距越大的 paper，其 proposal 的质量差异也越显著。
+### Removing the literature review, or even the core idea, didn't hurt
+进一步拆解发现，这 75% 的一致结果既不依赖我们设计的三阶段结构，也不依赖 proposal 中承载 idea 的核心内容。
 
-我们期望对 ranker 做更细致的分析，验证我们所设计的三个阶段是否真的有效，于是我们只保留最终的 judge agent，直接读取两份 proposal，跳过 literature review 和 analysis 阶段。为了验证不同 base model 是否具有一致的结果，我们在 GPT-5.4 和 Opus 4.6 上分别进行了实验，结果如下：
+**去掉 literature review 和 analysis，准确率依旧** 只保留 Judge Agent 直接读两份 proposal，准确率与完整的三阶段 ranker 持平，GPT-5.4 和 Opus 4.6 结果一致：
 
 | Configuration | Accuracy |
 |---|---|
@@ -205,22 +206,36 @@ Citation count gap 在 50 以上的 pair 全部判对，这一定程度上和我
 | Judge Agent only + GPT-5.4 | 76.0% |
 | Judge Agent only + Opus 4.6 | 76.0% |
 
-其最终的准确率几乎一致，甚至只保留 judge agent 的准确率还略高，这个结果让我们产生怀疑。我们认为在没有提供统一且可信的 literature review 的情况下，judge agent 直接对两份 proposal 的评估应该是不可靠的，但实验结果却并没有反映这一点。一开始我们怀疑这是 calibration benchmark 的问题：260 对 pair 中不同月份的分布不均匀，大部分 pairs 的时间节点都集中在 25 年 9 月份，而我们所选用的 GPT-5.4 和 Opus 4.6 的 knowledge cutoff 都在 8 月，很可能本身就对这之前的领域知识有充分的认知。于是我们对 calibration benchmark 做了第一次调整，基于之前的筛选规则重新选取 pair，重建了一个时间节点分布更均衡的 250 对 pair 的 test set，但最终准确率竟然直接达到了 80% 以上。这更让我们疑惑，我们不得不开始怀疑是否由真实 paper 还原的 proposal 本身就带有明显的质量差异信号，使得 judge agent 仅仅依据 proposal 中的某些内容就能完成评估呢？为了弄清楚这一点，我们开始对 proposal 的各块章节内容进行消融，最极端的实验，我们甚至让 judge agent 只看两份 proposal 的标题。最终的结果更加匪夷所思:
+按我们的设计，没有一份统一、可信的 literature review，judge 无从判断 proposal 在 $K_t$ 下的增量，准确率理应下降。
+
+**校准集时间分布更均衡后，准确率愈高** 我们先怀疑 benchmark 本身：260 对 pair 大多集中在 2025 年 9 月，紧贴两个 base model 8 月的 knowledge cutoff，模型可能本就熟悉相关领域。于是我们按同一筛选规则重新选取 pair，构建了一个时间分布更均衡的 250 对 test set，准确率却升到了 80% 以上。
+
+**删掉 proposal 的核心假设和方法，准确率依然保持** 我们怀疑，由真实 paper 还原的 proposal 本身就带有某种与 idea 无关的质量信号。对 proposal 的各章节做消融后，两个模型在各种输入组合下的准确率都在 79–83% 左右，删掉核心假设和方法后甚至略高：
 
 | Input | GPT-5.4 | Opus 4.6 |
 |---|---|---|
 | Random | 50.8% | 50.8% |
-| Titles only | 72.8% | 74.0% |
 | Core hypothesis + method + experiments | 79.2% | 82.0% |
 | Core hypothesis + method | 78.8% | 79.6% |
 | Full proposal | 82.4% | 80.4% |
 | Full proposal minus core hypothesis and method | 83.2% | 80.8% |
 
-去掉 proposal 中的一些核心模块后，准确率也并没有出现明显的波动。我们分析了一些具体的 proposal，其 related work、experiment、impact、references 等章节确实一定程度上存在重叠，比如删去 proposal 中的核心假设，但其信息在 Introduction 和后续的实验章节其实也间接出现了。此外，我们猜测一份高质量的 proposal 本身已经描述了足够详细的领域知识，这可能是让 literaure review agent 无用的原因。
+我们认为部分原因在于 proposal 章节之间的信息冗余：删掉核心假设后，它仍会在 Introduction 和实验设计中间接出现。我们还猜测，一份高质量的 proposal 本身就写进了足够多的领域知识，这可能也是 literature review 没有带来额外增益的原因。
 
-此外，只看两份 proposal 的标题，竟然也能够有 73% 左右的准确率。我们专门核查了 judge agent 的推理过程，它确实在围绕问题域和方法的可传播性做判断。比如 *Monet: Reasoning in Latent Visual Space Beyond Image and Language* [26] 和 *CoCoVa: Chain of Continuous Vision-Language Thought for Latent Space Reasoning* [27]，judge 仅凭两个标题，就判断后者 "names a more concrete and citeable research object"，并且最终判断正确。这说明目前的 judge agent 很大程度上只是在做关于选题和传播性的判断：这个方向热不热，这个贡献好不好被引用，名字起得响不响，这和我们期望的 idea 评估目标并不一致。我们的 calibration benchmark 可以被一个只看标题的 judge agent 解决大半，说明其衡量的能力点和我们真实想测的 idea 评估能力存在差距。
+### Titles alone are enough for 73%
+最极端的消融是只给 judge 两份 proposal 的标题，准确率仍有约 73%（GPT-5.4 为 72.8%，Opus 4.6 为 74.0%）。核查推理过程发现，judge 确实在围绕问题域和方法的可传播性做判断。例如 *Monet: Reasoning in Latent Visual Space Beyond Image and Language* [26] 和 *CoCoVa: Chain of Continuous Vision-Language Thought for Latent Space Reasoning* [27]，judge 仅凭两个标题就认为后者 "names a more concrete and citeable research object"，并且判对了。
 
-与此同时，我们搭建出了一批 ideation baselines：给定 benchmark 中一个 cohort 的研究方向和 cutoff 日期，让 Claude Code 或 Codex 这样的 CLI agent，借助一组我们设计的、具有严格 cutoff 限制的文献检索工具，完成文献调研、gap 分析、假设提出、设计实验，最后产出一份 proposal。我们用 Opus 4.6、GPT-5.4、DeepSeek-V4-Pro、Kimi-K2.6、GLM-5.1 等模型在 ideation benchmark 的 91 个 cohort 上各跑了一遍，并直接使用基于 Opus 4.6 的 judge agent 进行评测，把每份 AI proposal 和同一 cohort 中的人类 proposal 逐一比较：
+| Input | GPT-5.4 | Opus 4.6 |
+|---|---|---|
+| Random | 50.8% | 50.8% |
+| Titles only | 72.8% | 74.0% |
+
+我们认为基于之前的 rubric， judge 在这个 benchmark 上判断的主要是选题和传播性：方向是否热门，贡献好不好被引用，名字起得响不响。一个只看标题的 judge 就能解决 calibration benchmark 的大半，说明这个 benchmark 测到的能力，与我们真正想测的 idea 评估能力之间存在明显差距。
+
+### The judge falls for ambitious proposals
+差距在哪儿呢？这个问题在评测 AI proposal 时被放大了：judge 偏爱看上去宏大、易被采用的 proposal，却不检查它是否成立。
+
+我们同时搭建了一批 ideation baseline：给定一个 cohort 的研究方向和 cutoff 日期，让 Claude Code 和 Codex 等 CLI agent 借助一组有严格 cutoff 限制的文献检索工具，完成文献调研、gap 分析、假设提出和实验设计，最后产出一份 proposal。我们用五个模型在 ideation benchmark 的 91 个 cohort 上各产出了 proposal，再由基于 Opus 4.6 的 judge 把每份 AI proposal 与同一 cohort 中的人类 proposal 逐一比较。胜率普遍很高，但排序与这些 agent 的实际能力并不一致：
 
 | Ideation system | Win rate vs. human proposals |
 |---|---|
@@ -230,17 +245,18 @@ Citation count gap 在 50 以上的 pair 全部判对，这一定程度上和我
 | GPT-5.4 + Codex | 54.6% |
 | Kimi-K2.6 + Claude Code | 50.7% |
 
-这一实验结果也并不可信，一方面是 judge agent 本身就存在问题，另一方面这里的胜率排序和 agent 能力的排序也并不一致。我们开始对一些结果做 case study，一个典型的例子是 DeepSeek V4 Pro，其在一个多轮 agent 强化学习 cohort 上生成的 proposal 是研究多轮交互中的信用分配问题的。它和 cohort 中的 13 篇人类 proposal 逐一比较，实现了 100% 的胜率。judge agent 给出的理由如下：它解决的是一个 "fundamental algorithmic problem"，是一个 "drop-in module"，"no auxiliary model"，可以被 GRPO/DAPO 的广大用户直接采用，因而会获得 "durable method citation"。但我们自己读下来，发现它的核心机制并不扎实。它把多条 rollout 中同一个 step index 下不同 rollout 的动作当作彼此的 counterfactual，以此估计每一步的 advantage。问题是，在多轮交互中走到第 k 步时，不同 rollout 的 observation history 早已分叉，它们根本不是同一个状态下的不同选择，这个比较并不构成 counterfactual。
+以 DeepSeek-V4-Pro 为例。它在一个多轮 agent 强化学习的 cohort 上，提出了一个解决多轮交互中信用分配问题的方法，与 cohort 中 13 份人类 proposal 逐一比较，全部胜出。judge 给出的理由是：它解决的是一个 "fundamental algorithmic problem"，是一个 "drop-in module"，"no auxiliary model"，可以被 GRPO/DAPO 的大量用户直接采用，因而会获得 "durable method citation"。但它的核心机制并不成立：它把同一 step index 下不同 rollout 的动作当作彼此的 counterfactual，以此估计每一步的 advantage；而在多轮交互中走到第 k 步时，不同 rollout 的 observation history 早已分叉，这些动作并非同一状态下的不同选择，也就构不成 counterfactual。
 
-{{< iframe src="figures/ideaeval/08-proposal.html" height="600px" title="08-proposal" >}}
+{{< iframe src="figures/ideaeval/08-proposal.html" height="600px" title="Counterfactual Step Advantage · DeepSeek-V4-Pro proposal" >}}
 
-我们认为这是由于 judge agent 对 propoasl 的可行性验证做的并不扎实，因此偏好一些看似具有诱惑力但实则不具备可行性的 proposal。而我们之前构造的 calibration benchmark，其中的 proposal 全部由人类研究者的真实 paper 改写而来，本身就具备高度的可行性，这是 calibration benchmark 和真实评测之间的分布偏差。
+judge 会被这类 proposal 打动，是因为它没有认真验证可行性。而 calibration benchmark 暴露不了这个弱点：其中的 proposal 全部改写自真实 paper，可行性在构造时就已得到保证。这是 calibration 与真实评测之间的分布偏差。
 
-因此需要再对 calibration benchmark 的 pair 分布进行调整，再基于此对 judge agent 做校准。我们期望构造出这样的 human-AI pair：pair 中的一个 proposal 是由人类研究者真实 paper 改写，另一个 proposal 由 ideation 系统产生，这才和真实的评测需求一致。此外，需要存在一部分 ideation 系统产生的 proposal 存在明显的不可行或缺陷，以此来修正 judge agent 对 proposal 可行性的判断能力。
+### The judge is at chance for human-AI pair
+为弥补这一偏差，我们构造了 human–AI pair 来重新校准 judge，结果它的准确率只有 49.3%，接近随机，并且系统性地偏向 AI proposal。
 
-human-AI pair 没有 citation 可以作为 which one is better 的标签，只能人工标注。我们从 ideation baseline 中跑出的 proposal 入手，检查 AI proposal 是否已被已有工作抢先、是否存在幻觉、方法是否 sound、实验设计是否有缺陷，并标注严重程度并附上证据；然后再和 benchmark 中对应 cohort 中的 proposal 组成 pair。此外，确实存在少量质量较高的 AI proposal，我们也如实和人类 proposal 进行比较，并保留了少量 AI proposal 胜出的 pair。最终我们得到了 75 对标注好的 human-AI pair，其中 18 对 pair 中 AI proposal 胜出，57 对 pair 中人类 proposal 胜出，且后者中的大部分 AI proposal 标注了显著的缺陷。
+**标注过程** human–AI pair 没有引用可以作为标签，只能人工标注。我们逐份检查 ideation baseline 产出的 AI proposal：是否已被已有工作抢先、是否存在幻觉、方法是否 sound、实验设计是否有缺陷，并标注严重程度、附上证据；再将它与对应 cohort 中的人类 proposal 组成 pair。少数质量确实较高的 AI proposal 也如实参与比较。最终得到 75 对 pair：AI 胜出 18 对，人类胜出 57 对，后者中的 AI proposal 大多标有显著缺陷。
 
-我们简单修改了 judge agent 使其和我们的标注过程一致，让其对 proposal 的缺陷也进行识别，并判断缺陷的严重程度，然后再做综合判断。在这 75 对 human-AI pair 上做评测，judge agent 的准确率只有 49.3%，只接近随机结果。
+**实验结果** 我们修改了 judge，使其与标注流程一致：先识别 proposal 的缺陷并判断严重程度，再做综合判断。它在 AI 胜出的 pair 上准确率为 83%，在人类胜出的 pair 上只有 39%：
 
 | Label | Pairs | Accuracy |
 |---|---|---|
@@ -248,11 +264,13 @@ human-AI pair 没有 citation 可以作为 which one is better 的标签，只�
 | Human proposal better | 57 | 39% |
 | Overall | 75 | 49.3% |
 
-我们统计了它对缺陷识别的情况。在所有判错的 pair 中，judge agent 没有一次把 AI proposal 判为致命缺陷。即便把范围扩大到全部 75 对，在标注者认定 AI proposal 存在致命缺陷的 15 对 pair 中，judge agent 也只在其中 8 对上识别成功。
+**缺陷识别分析** 在所有判错的 pair 中，judge 没有一次把 AI proposal 判为存在致命缺陷；在标注者认定 AI proposal 存在致命缺陷的 15 对中，它只识别出 8 对。具体 case 中，judge 往往读到了缺陷所在的位置，却没有验证；有时它已经识别出标注者指出的风险，最终仍判 AI 胜出。它更偏好 AI proposal 中完整、漂亮的实验计划，还会主动把 AI proposal 中站不住的宽泛假设收窄成一个仍然可行的版本，却不给人类 proposal 同样的宽容。
 
-翻看具体的 case，我们发现 judge agent 往往读到了缺陷位置，但没有验证。甚至有时 judge agent 已经识别出了标注者所指出的风险，最终依然判 AI 胜出：它依然更偏好 AI proposal 中完整、漂亮的实验计划，也会将 AI proposal 站不住的脚的宽泛假设收窄成一个仍然可行的版本，却不给人类 proposal 同样的宽容。
-
-针对这些问题，我们对 rubric 再做了几轮调整：先审核 proposal 的核心主张，再判断 soundness 和可行性，再检查已有工作，最后才综合评估影响力，但实验结果依然没有改善。最后，我们强制修改 judge agent 的判断流程，让其对 proposal 中每一个公式和关键信号动手验证，必要时写代码跑一个最小的例子。这个机制一定程度上确实生效了，judge agent 开始做维度检查、逐行验证推导，并能够识别出一些标注的缺陷，但最终的实验准确率依然没有起色。我们也尝试了更换 base model，甚至也尝试去使用 knowledge cutoff 不符合要求的 GPT-5.5：
+### Nothing we tried helped
+此后的所有修正，准确率都没有超过最初的 49.3%：
+- **重排 rubric**：先审核 proposal 的核心主张，再判断 soundness 和可行性，再检查已有工作，最后才评估影响力。
+- **强制验证**：要求 judge 对 proposal 中每一个公式和关键信号动手验证，必要时写代码跑一个最小例子。这在行为上确实生效了，judge 开始做维度检查、逐行验证推导，也能识别出部分标注的缺陷，但准确率没有起色。
+- **更换 base model**：包括能力更强但 knowledge cutoff 并不满足要求的 GPT-5.5。
 
 | Judge Agent | Overall accuracy | AI-better subset | Human-better subset |
 |---|---|---|---|
@@ -261,19 +279,23 @@ human-AI pair 没有 citation 可以作为 which one is better 的标签，只�
 | Opus 4.6 (forced verification) | ~43% | 100% | 32% |
 | GPT-5.5 (forced verification) | 45% | 67% | 39% |
 
-之后的优化甚至都不如最开始的准确率。我们猜测可能是 AI proposal 被 ideation 系统包装得更新颖、高影响、宏大；而人类 proposal 则忠实地描述了一篇真实的、因而往往是增量的、扎堆的、工程化的 paper。而 judge agent 的任务，恰恰是预测影响力、新颖性和被引用的可能性，或许 ideation 系统在这些方面更具优势。此外，human-AI pair 的标注由我们团队人工完成，不同标注者直接的标注质量可能也存在差异，我们也缺乏足够多的人力再去进行交叉验证。总之，无论是调整 rubric 还是更换模型，都不再有明显的收益，且此时恰逢一些外部因素，我们的项目停滞在了这里，没有再进一步探索下去。
+我们猜测，ideation 系统把 AI proposal 包装得新颖、宏大、高影响，而人类 proposal 忠实描述的是一篇真实的、因而往往是增量的、扎堆的、工程化的 paper；judge 的任务恰恰是预测影响力、新颖性和被引用的可能性，在这些维度上 AI proposal 天然占优。有很多因素需要进一步分析，但项目至此，恰逢一些外部因素，探索过程也到此为止了。
 
-## chapter 4
-在这个项目周期中，我们尝试对 idea 的评估进行系统性的建模，但最终 judge agent 的判断逻辑与我们的建模目标似乎始终无法校准到一致。我们的 paper 几乎已经写好，只差填入最后对 ideation 系统的评估数据，但由于 judge agent 本身评测的不准确，我们怎样也无法得到可信的结果。
+## Afterword
+我们最终没能把 judge agent 校准到可用的程度。项目 paper 几乎已经写好，只差填入对 ideation 系统的评估数据，但一个在 human–AI pair 上接近随机的 judge 无法给出可信的结果。
 
-回头看设计本身，我们的这套评估模式本身确实存在一些局限：
-1. **并没有找到一个完美的 idea 价值的代理信号。** citation 同时反映了 topic 热度、作者知名度、研究机构、代码是否开源、benchmark 是否被广泛采用等诸多因素；human-AI pair 的标签则取决于人工标注的质量。
-2. **paper-to-proposal 的转换不可避免地带有后见之明。** 即便删去了所有实验结果，还原出的 proposal 依然会继承成品 paper 的结构、叙事和实验选择，因而比之一份真正写在实验之前的 proposal 会更加连贯且保守。
-3. **偏序比较会放大 judge agent 的系统性偏好。** 当两份 proposal 的真实价值相差不大时，judge agent 的选择往往取决于它的偏好：更优美的文本风格、更熟悉的方法等，且这一点难以消除。
+回看设计本身，这套评估模式本身确实存在一些局限：
+1. **引用不是 idea 价值的完美信号** citation 同时反映了 topic 热度、作者知名度、研究机构、代码是否开源、benchmark 是否被广泛采用等诸多因素；human-AI pair 的标签则取决于人工标注的质量，标注者之间可能存在差异，而我们没有足够的人力做交叉验证。
+2. **paper-to-proposal 的转换带有后见之明** 即便删去所有实验结果，还原出的 proposal 依然继承了成品 paper 的结构、叙事和实验选择，比一份真正写在实验之前的 proposal 更连贯、更保守，可行性也在构造时就已得到保证。因此 calibration benchmark 无法检验 judge 对可行性的判断，人类 proposal 与 AI proposal 之间也多了一层风格上的差异。
+3. **pairwise 比较放大 judge agent 的系统性偏好** 当两份 proposal 的真实价值相差不大时，judge agent 的选择往往取决于它的偏好：更优美的文本风格、更熟悉的方法等，且这一点难以消除。
 
-此外不得不说的是，这个问题从一开始也被我们考虑得太大了，其中的很多失败模式都变得难以诊断和验证，因为混杂了太多的噪声。当 judge agent 判错时，我们很难分清问题出在标签、出在 paper-to-proposal 的转换、出在 rubric、出在检索，还是出在模型本身的能力上。每一个环节都可能是原因，而很难去做到可控的分析和调整，看不到清晰的因果。
+此外，这个问题被定义得太大了。当 judge 判错时，我们很难分清问题出在标签、paper-to-proposal 的转换、rubric、检索，还是模型本身的能力上。每一个环节都可能是原因，噪声混杂在一起，我们既做不了可控的分析和调整，也看不到清晰的因果，很多失败模式因此难以诊断和验证。
 
-在文章开始前，我们提到过那些"以单一可验证维度为标准"的工作：只评 novelty，或者只预测实验提点，认为它们评的不是一份完整的 proposal。但这种取舍或许恰恰是它们能拿到可信结果的原因，能够有更干净的校验信号和更清晰的失败模式。但我们依然认为评估一个 idea 的完整价值是一个值得追求的目标，这也有系列工作在尝试，但或许需要被拆成一系列更小、可以被单独验证的问题，一步步地去逼近最终的价值。
+我们把 research taste 定义为在实验之前估计 $V(H, K_t)$ 的能力，并认为其体现在对多个维度的综合权衡上。正因如此，我们没有走那些 "以单一可验证维度为标准" 的路线，而是试图一次性拟合整体的判断。现在看来，那些工作的取舍或许恰恰是它们能拿到可信结果的原因：校验信号更干净，失败模式也更清晰。
+
+这种综合的 research taste 能力是必要的，是制约 auto research 真正走向高质量的关键。这一次我们没能实现，但这将一直是一种迷人的能力和值得探索的方向。
+
+## References
 
 1. Reviewer3. *ICLR Went From 490 Submissions to 62,000 in Ten Years*. 2026. <https://reviewer3.com/evidence/iclr-submissions-2027>
 2. Qiong Tang, Tianxiang Sun, Xiangkun Hu, et al. *FARS: A Fully Automated Research System Deployed at Scale*. arXiv:2606.31651, 2026. <https://arxiv.org/abs/2606.31651>
