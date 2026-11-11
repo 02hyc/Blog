@@ -384,39 +384,6 @@ summary:focus-visible {
     letter-spacing: 0.025em;
 }
 
-.post-versions {
-    margin-bottom: 0.25rem;
-    color: var(--secondary);
-    font-size: 0.78rem;
-    letter-spacing: 0.025em;
-}
-
-.post-versions .post-version {
-    margin-left: 0.3em;
-}
-
-.post-versions a.post-version {
-    color: var(--accent);
-}
-
-.post-versions .current {
-    color: var(--primary);
-    font-weight: 600;
-}
-
-.post-archived-note {
-    margin: 0.6rem 0 0.4rem;
-    padding: 0.5rem 0.75rem;
-    border-inline-start: 3px solid var(--accent-hover);
-    background: var(--paper);
-    color: var(--secondary);
-    font-size: 0.8rem;
-}
-
-.post-archived-note a {
-    color: var(--accent);
-}
-
 .post-meta {
     align-items: center;
     color: var(--secondary);

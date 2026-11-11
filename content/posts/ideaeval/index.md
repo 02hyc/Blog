@@ -8,8 +8,6 @@ tags: ["Auto Research", "Idea Evaluation", "LLM Agents"]
 categories: ["Research"]
 showToc: true
 TocOpen: false
-versions: ideaeval
-versionLang: en
 translation: /posts/ideaeval-zh
 translationLabel: "中文"
 ---

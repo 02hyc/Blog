@@ -33,7 +33,6 @@
     </div>
     {{- .Store.Set "hideMetaDate" true }}
     {{- end }}
-    {{- partial "post_versions.html" . }}
     {{- if not (.Param "hideMeta") }}
     <div class="post-meta">
       {{- partial "post_meta.html" . -}}
