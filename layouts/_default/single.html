@@ -19,9 +19,10 @@
       {{- if reflect.IsSlice . }}{{ delimit . ", " }}{{ else }}{{ . }}{{ end -}}
     </div>
     {{- end }}
-    {{- if .Description }}
+    {{- /* `acknowledgment` is shown here in place of `description`, which then serves only as the search and share summary. */}}
+    {{- with .Params.acknowledgment | default .Description }}
     <div class="post-description">
-      {{ .Description }}
+      {{ . }}
     </div>
     {{- end }}
     {{- if not .Date.IsZero }}
