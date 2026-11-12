@@ -2,7 +2,7 @@
 title: "IdeaEval: Impact-Oriented Evaluation of Scientific Hypothesis Generation"
 date: 2026-10-16
 author: ["Yanchen Huang", "Yuchen Niu", "Xiangkun Hu"]
-description: "Can an LLM judge learn research taste? We calibrated a pairwise proposal judge against later citations: 75–83% agreement on real-paper pairs, yet about 73% from titles alone and 49.3% on human–AI pairs. It was grading topics, not ideas."
+description: "What makes a research idea worth pursuing—and can AI tell before the experiments? Lessons from building IdeaEval."
 acknowledgment: "This work was conducted during an internship at Analemma AI. We gratefully acknowledge Hengquan Guo, Sheng Xia, Yuzhe Yang, Yuanbo Yang, Yiran Chen, and Tianxiang Sun for their valuable assistance and contributions."
 math: true
 tags: ["Auto Research", "Idea Evaluation", "LLM Agents"]

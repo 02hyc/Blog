@@ -2,7 +2,7 @@
 title: "IdeaEval: Impact-Oriented Evaluation of Scientific Hypothesis Generation"
 date: 2026-10-16
 author: ["Yanchen Huang", "Yuchen Niu", "Xiangkun Hu"]
-description: "LLM judge 能学会 research taste 吗？我们用后续引用校准了一个两两比较 proposal 的 judge agent：在真实论文还原的 pair 上一致率 75–83%，但只看标题也有约 73%，在 human–AI pair 上仅 49.3%，接近随机。它评的是选题，而不是 idea。"
+description: "什么样的 research idea 值得投入？AI 能否在实验之前就做出判断？这是我们构建 IdeaEval 过程中的一些经验。"
 acknowledgment: "This work was conducted during an internship at Analemma AI. We gratefully acknowledge Hengquan Guo, Sheng Xia, Yuzhe Yang, Yuanbo Yang, Yiran Chen, and Tianxiang Sun for their valuable assistance and contributions."
 images: ["posts/ideaeval/cover.png"]
 math: true
