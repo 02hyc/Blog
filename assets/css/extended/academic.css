@@ -410,6 +410,16 @@ summary:focus-visible {
     text-wrap: pretty;
 }
 
+/* Bold barely stands out against near-black body text, so emphasis goes heavier: Latin
+   uses Charter Black (800), and CJK falls through to a sans (黑体-style) semibold since
+   Songti's bold is hardly heavier than its regular weight. */
+.post-content strong,
+.post-content b {
+    color: var(--primary);
+    font-family: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-weight: 800;
+}
+
 .post-content h1,
 .post-content h2,
 .post-content h3,
